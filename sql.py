@@ -19,15 +19,19 @@ def Main(test, get_database_type):
             print('Site is not vulnerable!')
     elif args.get_database_type:
         urls = [args.get_database_type + "'", args.get_database_type + '"', args.get_database_type[:-4] + ';', args.get_database_type[:-4] + ")", args.get_database_type[:-4] + "')", args.get_database_type[:-4] + '")', args.get_database_type[:-4] + '*']
-        database_identifiers = ['MySQL']
+        MySQL_database_identifiers = ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()']
+        list2 = ['']
         for url in urls:
             results = requests.get(url)
             data = results.text
             soup = BS(data, features='html.parser')
-            for dbi in database_identifiers:
-                if dbi in database_identifiers:
-                    continue
-        if dbi == 'MySQL':
+            for dbi in MySQL_database_identifiers:
+                if dbi in MySQL_database_identifiers:
+                    MySQL = True
+            for dbi in list2:
+                if dbi in list2:
+                    test = True
+        if MySQL:
             print('Database type is: MySQL')
         else:
             print('Database type is: Unknown')
