@@ -19,7 +19,18 @@ def Main(test, get_database_type):
             print('Site is not vulnerable!')
     elif args.get_database_type:
         urls = [args.get_database_type + "'", args.get_database_type + '"', args.get_database_type[:-4] + ';', args.get_database_type[:-4] + ")", args.get_database_type[:-4] + "')", args.get_database_type[:-4] + '")', args.get_database_type[:-4] + '*']
-        
+
+        # Init Database Types
+        MySQL = False
+        PostGre = False
+        Microsoft_SQL = False
+        Oracle = False
+        Advantage_Database_Server = False
+        Firebird = False
+        Azure = False
+        SqlCe = False
+        VistaDb = False
+
         # Database Identifiers
         MySQL_list = ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()']
         PostGre_list = ['']
@@ -36,31 +47,31 @@ def Main(test, get_database_type):
             data = results.text
             soup = BS(data, features='html.parser')
             for dbi in MySQL_list:
-                if dbi in MySQL_list:
+                if dbi in data:
                     MySQL = True
             for dbi in PostGre_list:
-                if dbi in PostGre_list:
+                if dbi in data:
                     PostGre = True
             for dbi in Microsoft_SQL_list:
-                if dbi in Microsoft_SQL_list:
+                if dbi in data:
                     Microsoft_SQL = True
             for dbi in Oracle_list:
-                if dbi in Oracle_list:
+                if dbi in data:
                     Oracle = True
             for dbi in Advantage_Database_list:
-                if dbi in Advantage_Database_list:
+                if dbi in data:
                     Advantage_Database_Server = True
             for dbi in Firebird_list:
-                if dbi in Firebird_list:
+                if dbi in data:
                     Firebird = True
             for dbi in Azure_list:
-                if dbi in Azure_list:
+                if dbi in data:
                     Azure = True
             for dbi in SqlCe_list:
-                if dbi in SqlCe_list:
+                if dbi in data:
                     SqlCe = True
             for dbi in VistaDb_list:
-                if dbi in VistaDb_list:
+                if dbi in data:
                     VistaDb = True
         if MySQL:
             print('Database type is: MySQL')
