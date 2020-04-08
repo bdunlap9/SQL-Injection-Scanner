@@ -19,20 +19,24 @@ def Main(test, get_database_type):
             print('Site is not vulnerable!')
     elif args.get_database_type:
         urls = [args.get_database_type + "'", args.get_database_type + '"', args.get_database_type[:-4] + ';', args.get_database_type[:-4] + ")", args.get_database_type[:-4] + "')", args.get_database_type[:-4] + '")', args.get_database_type[:-4] + '*']
-        MySQL_database_identifiers = ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()']
-        list2 = ['']
+        MySQL_list = ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()']
+        PostGre_list = ['']
         for url in urls:
             results = requests.get(url)
             data = results.text
             soup = BS(data, features='html.parser')
-            for dbi in MySQL_database_identifiers:
-                if dbi in MySQL_database_identifiers:
+            for dbi in MySQL_list:
+                if dbi in MySQL_list:
                     MySQL = True
-            for dbi in list2:
-                if dbi in list2:
-                    test = True
+                else:
+                    unknown = True
+            for dbi in PostGre_list:
+                if dbi in PostGre_list:
+                    PostGre = True
         if MySQL:
             print('Database type is: MySQL')
+        elif PostGre:
+            print('Database type is: PostGre')
         else:
             print('Database type is: Unknown')
     else:
