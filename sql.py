@@ -48,7 +48,10 @@ def Main(test, get_database_type, dbname, tablenames, dump):
         str1 = str1_num[8:]
         str2 = str1.find('\'')
         str3 = str1[:str2]
-        print("Database name: " + str3)
+        if str_num == -1:
+            print('Access Denied')
+        else:
+            print("Database name: " + str3)
     elif args.get_database_type:
         urls = [args.get_database_type + "'", args.get_database_type + '"', args.get_database_type[:-4] + ';', args.get_database_type[:-4] + ")", args.get_database_type[:-4] + "')", args.get_database_type[:-4] + '")', args.get_database_type[:-4] + '*']
         DBDict = {
