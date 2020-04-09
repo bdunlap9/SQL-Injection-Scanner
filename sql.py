@@ -81,6 +81,105 @@ def Main(test, get_database_type, dbname):
         except:
             MySQL = False
 
+        try:
+            for url in urls:
+                results = requests.get(url)
+                data = results.text
+                soup = BS(data, features='html.parser')
+                for dbi in PostGre_list:
+                    if dbi in data:
+                        PostGre = True
+        except:
+            PostGre = False
+
+        try:
+            for url in urls:
+                results = requests.get(url)
+                data = results.text
+                soup = BS(data, features='html.parser')
+                for dbi in Microsoft_SQL_list:
+                    if dbi in data:
+                        Microsoft_SQL = True
+        except:
+            Microsoft_SQL = False
+
+        try:
+            for url in urls:
+                results = requests.get(url)
+                data = results.text
+                soup = BS(data, features='html.parser')
+                for dbi in Oracle_list:
+                    if dbi in data:
+                        Oracle = True
+        except:
+            Oracle = False
+
+        try:
+            for url in urls:
+                results = requests.get(url)
+                data = results.text
+                soup = BS(data, features='html.parser')
+                for dbi in Advantage_Database_list:
+                    if dbi in data:
+                        Advantage_Database_Server = True
+        except:
+            Advantage_Database_Server = False
+
+        try:
+            for url in urls:
+                results = requests.get(url)
+                data = results.text
+                soup = BS(data, features='html.parser')
+                for dbi in Firebird_list:
+                    if dbi in data:
+                        Firebird = True
+        except:
+            Firebird = False
+
+        try:
+            for url in urls:
+                results = requests.get(url)
+                data = results.text
+                soup = BS(data, features='html.parser')
+                for dbi in Azure_list:
+                    if dbi in data:
+                        Azure = True
+        except:
+            Azure = False
+
+        try:
+            for url in urls:
+                results = requests.get(url)
+                data = results.text
+                soup = BS(data, features='html.parser')
+                for dbi in SqlCe_list:
+                    if dbi in data:
+                        SqlCe = True
+        except:
+            SqlCe = False
+
+        try:
+            for url in urls:
+                results = requests.get(url)
+                data = results.text
+                soup = BS(data, features='html.parser')
+                for dbi in VistaDb_list:
+                    if dbi in data:
+                        VistaDb = True
+        except:
+            VistaDb = False
+
+        try:
+            for url in urls:
+                results = requests.get(url)
+                data = results.text
+                soup = BS(data, features='html.parser')
+                for dbi in MariaDB_list:
+                    if dbi in data:
+                        MariaDB = True
+        except:
+            MariaDB = False
+
         if MySQL:
             print('Database type is: MySQL')
         elif PostGre:
