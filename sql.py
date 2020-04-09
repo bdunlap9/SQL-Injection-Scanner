@@ -1,4 +1,4 @@
-import requests, argparse, itertools
+import requests, argparse
 from bs4 import BeautifulSoup as BS
 
 def Main(test, get_database_type, dbname, tablenames):
@@ -43,163 +43,31 @@ def Main(test, get_database_type, dbname, tablenames):
         print("Database name: " + str3)
     elif args.get_database_type:
         urls = [args.get_database_type + "'", args.get_database_type + '"', args.get_database_type[:-4] + ';', args.get_database_type[:-4] + ")", args.get_database_type[:-4] + "')", args.get_database_type[:-4] + '")', args.get_database_type[:-4] + '*']
-
-        # Init Database Types
-        MySQL = False
-        PostGre = False
-        Microsoft_SQL = False
-        Oracle = False
-        Advantage_Database_Server = False
-        Firebird = False
-        Azure = False
-        SqlCe = False
-        VistaDb = False
-        MariaDB = False
-
-        # Database Identifiers
-        MySQL_list = ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()']
-        PostGre_list = ['dafafdfds']
-        Microsoft_SQL_list = ['dafafdfds']
-        Oracle_list = ['dafafdfds']
-        Advantage_Database_list = ['dafafdfds']
-        Firebird_list = ['dafafdfds']
-        Azure_list = ['dafafdfds']
-        SqlCe_list = ['dafafdfds']
-        VistaDb_list = ['dafafdfds']
-        MariaDB_list = ['dafafdfds']
-
+        DBDict = {
+            "MySQL"             : ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()'],
+            "PostGre"           : ['dafafdfds'],
+            "Microsoft_SQL"     : ['dafafdfds'],
+            "Oracle"            : ['dafafdfds'],
+            "Advantage_Database": ['dafafdfds'],
+            "Firebird"          : ['dafafdfds']  
+        }
+        DBFound = 0
+        DBType = ''
         try:
             for url in urls:
                 results = requests.get(url)
                 data = results.text
                 soup = BS(data, features='html.parser')
-                for dbi in MySQL_list:
-                    if dbi in data:
-                        MySQL = True
+                while not DBFound:
+                    for db, identifiers in DBDict.items():
+                        for dbid in identifiers:
+                            if dbid in data:
+                                DBType = db
+                                DBFound = 1
+                                print(DBType)
+                                break
         except:
-            MySQL = False
-
-        try:
-            for url in urls:
-                results = requests.get(url)
-                data = results.text
-                soup = BS(data, features='html.parser')
-                for dbi in PostGre_list:
-                    if dbi in data:
-                        PostGre = True
-        except:
-            PostGre = False
-
-        try:
-            for url in urls:
-                results = requests.get(url)
-                data = results.text
-                soup = BS(data, features='html.parser')
-                for dbi in Microsoft_SQL_list:
-                    if dbi in data:
-                        Microsoft_SQL = True
-        except:
-            Microsoft_SQL = False
-
-        try:
-            for url in urls:
-                results = requests.get(url)
-                data = results.text
-                soup = BS(data, features='html.parser')
-                for dbi in Oracle_list:
-                    if dbi in data:
-                        Oracle = True
-        except:
-            Oracle = False
-
-        try:
-            for url in urls:
-                results = requests.get(url)
-                data = results.text
-                soup = BS(data, features='html.parser')
-                for dbi in Advantage_Database_list:
-                    if dbi in data:
-                        Advantage_Database_Server = True
-        except:
-            Advantage_Database_Server = False
-
-        try:
-            for url in urls:
-                results = requests.get(url)
-                data = results.text
-                soup = BS(data, features='html.parser')
-                for dbi in Firebird_list:
-                    if dbi in data:
-                        Firebird = True
-        except:
-            Firebird = False
-
-        try:
-            for url in urls:
-                results = requests.get(url)
-                data = results.text
-                soup = BS(data, features='html.parser')
-                for dbi in Azure_list:
-                    if dbi in data:
-                        Azure = True
-        except:
-            Azure = False
-
-        try:
-            for url in urls:
-                results = requests.get(url)
-                data = results.text
-                soup = BS(data, features='html.parser')
-                for dbi in SqlCe_list:
-                    if dbi in data:
-                        SqlCe = True
-        except:
-            SqlCe = False
-
-        try:
-            for url in urls:
-                results = requests.get(url)
-                data = results.text
-                soup = BS(data, features='html.parser')
-                for dbi in VistaDb_list:
-                    if dbi in data:
-                        VistaDb = True
-        except:
-            VistaDb = False
-
-        try:
-            for url in urls:
-                results = requests.get(url)
-                data = results.text
-                soup = BS(data, features='html.parser')
-                for dbi in MariaDB_list:
-                    if dbi in data:
-                        MariaDB = True
-        except:
-            MariaDB = False
-
-        if MySQL:
-            print('Database type is: MySQL')
-        elif PostGre:
-            print('Database type is: PostGre')
-        elif Microsoft_SQL:
-            print('Database type is: Microsoft SQL Server')
-        elif Oracle:
-            print('Database type is: Oracle')
-        elif Advantage_Database_Server:
-            print('Database type is: Advantage Database Server')
-        elif Firebird:
-            print('Database type is: Firebird')
-        elif Azure:
-            print('Database type is: Azure')
-        elif SqlCe:
-            print('Database type is: SqlCe')
-        elif VistaDb:
-            print('Database type is: VistaDb')
-        elif MariaDB:
-            print('Database type is: MariaDB')
-        else:
-            print('Database type is: Unknown')
+            print('Database type: Unknown')
     else:
         print('Invalid Argument given!')
 
