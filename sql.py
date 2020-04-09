@@ -59,16 +59,16 @@ def Main(test, get_database_type, dbname):
         MariaDB = False
 
         # Database Identifiers
-        MySQL_list = [''] #['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()']
-        PostGre_list = ['']
-        Microsoft_SQL_list = ['']
-        Oracle_list = ['']
-        Advantage_Database_list = ['']
-        Firebird_list = ['']
-        Azure_list = ['']
-        SqlCe_list = ['']
-        VistaDb_list = ['']
-        MariaDB_list = ['']
+        MySQL_list = ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()']
+        PostGre_list = ['dafafdfds']
+        Microsoft_SQL_list = ['dafafdfds']
+        Oracle_list = ['dafafdfds']
+        Advantage_Database_list = ['dafafdfds']
+        Firebird_list = ['dafafdfds']
+        Azure_list = ['dafafdfds']
+        SqlCe_list = ['dafafdfds']
+        VistaDb_list = ['dafafdfds']
+        MariaDB_list = ['dafafdfds']
 
         try:
             for url in urls:
@@ -78,55 +78,8 @@ def Main(test, get_database_type, dbname):
                 for dbi in MySQL_list:
                     if dbi in data:
                         MySQL = True
-                    else:
-                        continue
-                for dbi in PostGre_list:
-                    if dbi in data:
-                        PostGre = True
-                    else:
-                        continue
-                for dbi in Microsoft_SQL_list:
-                    if dbi in data:
-                        Microsoft_SQL = True
-                    else:
-                        continue
-                for dbi in Oracle_list:
-                    if dbi in data:
-                        Oracle = True
-                    else:
-                        continue
-                for dbi in Advantage_Database_list:
-                    if dbi in data:
-                        Advantage_Database_Server = True
-                    else:
-                        continue
-                for dbi in Firebird_list:
-                    if dbi in data:
-                        Firebird = True
-                    else:
-                        continue
-                for dbi in Azure_list:
-                    if dbi in data:
-                        Azure = True
-                    else:
-                        continue
-                for dbi in SqlCe_list:
-                    if dbi in data:
-                        SqlCe = True
-                    else:
-                        continue
-                for dbi in VistaDb_list:
-                    if dbi in data:
-                        VistaDb = True
-                    else:
-                        continue
-                for dbi in MariaDB_list:
-                    if dbi in MariaDB_list:
-                        MariaDB = True
-                    else:
-                        continue
         except:
-            pass
+            MySQL = False
 
         if MySQL:
             print('Database type is: MySQL')
