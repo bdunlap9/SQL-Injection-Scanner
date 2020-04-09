@@ -30,9 +30,10 @@ def Main(test, get_database_type):
         Azure = False
         SqlCe = False
         VistaDb = False
+        MariaDB = False
 
         # Database Identifiers
-        MySQL_list = ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()']
+        MySQL_list = ['']#['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()']
         PostGre_list = ['']
         Microsoft_SQL_list = ['']
         Oracle_list = ['']
@@ -41,6 +42,7 @@ def Main(test, get_database_type):
         Azure_list = ['']
         SqlCe_list = ['']
         VistaDb_list = ['']
+        MariaDB_list = ['']
 
         for url in urls:
             results = requests.get(url)
@@ -73,6 +75,9 @@ def Main(test, get_database_type):
             for dbi in VistaDb_list:
                 if dbi in data:
                     VistaDb = True
+            for dbi in MariaDB_list:
+                if dbi in MariaDB_list:
+                    MariaDB = True
         if MySQL:
             print('Database type is: MySQL')
         elif PostGre:
@@ -91,6 +96,8 @@ def Main(test, get_database_type):
             print('Database type is: SqlCe')
         elif VistaDb:
             print('Database type is: VistaDb')
+        elif MariaDB:
+            print('Database type is: MariaDB')
         else:
             print('Database type is: Unknown')
     else:
