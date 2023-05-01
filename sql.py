@@ -61,14 +61,31 @@ def Main(test, get_database_type, dbname, tablenames, dump, columns, colum_name)
             print(f"Database name: {str3}")
     elif args.get_database_type:
         urls = [args.get_database_type + "'", args.get_database_type + '"', args.get_database_type[:-4] + ';', args.get_database_type + ")", args.get_database_type + "')", args.get_database_type + '")', args.get_database_type + '*']
-        DBDict = {
-            "MySQL"             : ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()'],
-            "PostGre"           : ['dafafdfds'],
-            "Microsoft_SQL"     : ['dafafdfds'],
-            "Oracle"            : ['dafafdfds'],
-            "Advantage_Database": ['dafafdfds'],
-            "Firebird"          : ['dafafdfds']  
-        }
+        db_dict = {
+    "MySQL": [
+        'MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()',
+        '1064 You have an error in your SQL syntax'
+    ],
+    "PostGre": [
+        'PostgreSQL query failed', 'Query failed', 'syntax error', 'unterminated quoted string', 'unterminated dollar-quoted string',
+        'column not found', 'relation not found', 'function not found'
+    ],
+    "Microsoft_SQL": [
+        'Microsoft SQL Server', 'Invalid object name', 'Unclosed quotation mark', 'Incorrect syntax near', 'SQL Server error',
+        'The data types ntext and nvarchar are incompatible'
+    ],
+    "Oracle": [
+        'ORA-', 'Oracle error', 'PLS-', 'invalid identifier', 'missing expression', 'missing keyword', 'missing right parenthesis',
+        'not a valid month'
+    ],
+    "Advantage_Database": [
+        'AdsCommandException', 'AdsConnectionException', 'AdsException', 'AdsExtendedReader', 'AdsDataReader', 'AdsError'
+    ],
+    "Firebird": [
+        'Dynamic SQL Error', 'SQL error code', 'arithmetic exception', 'numeric value is out of range', 'malformed string',
+        'Invalid token'
+    ]
+}
         DBFound = 0
         DBType = ''
         try:
