@@ -364,14 +364,18 @@ class SQLInjectionScanner:
 async def main():
     parser = argparse.ArgumentParser(description="SQL Injection Scanner")
     parser.add_argument("target_url", help="Target URL")
+    parser.add_argument("--get_current_user", action="store_true", help="Retrieve current user")
     args = parser.parse_args()
 
     scanner = SQLInjectionScanner(args.target_url, "")
     db_type = await scanner.scan_database_type()
-    
+
     if db_type:
         await scanner.get_database_name()
-        await scanner.get_current_user()
+
+        if args.get_current_user:
+            await scanner.get_current_user()
+
     else:
         print(f"Could not find a vulnerability...")
 
