@@ -40,6 +40,24 @@ class SQLInjectionScanner:
                     print('Database type: Unknown')
                     break
         return db_type
+    
+    async def get_version(self):
+        print(f"Getting version for {self.database_type} database...")
+
+        if self.database_type == "MySQL":
+            await self.perform_mysql_get_version()
+        elif self.database_type == "PostGre":
+            await self.perform_postgre_get_version()
+        elif self.database_type == "Microsoft_SQL":
+            await self.perform_microsoftsql_get_version()
+        elif self.database_type == "Oracle":
+            await self.perform_oracle_get_version()
+        elif self.database_type == "Advantage_Database":
+            await self.perform_advantage_get_version()
+        elif self.database_type == "Firebird":
+            await self.perform_firebird_get_version()
+        else:
+            print(f"Unsupported database type: {self.database_type}")
 
     async def get_database_name(self):
         print(f"Getting database name for {self.database_type} database...")
@@ -365,6 +383,7 @@ async def main():
     parser = argparse.ArgumentParser(description="SQL Injection Scanner")
     parser.add_argument("target_url", help="Target URL")
     parser.add_argument("--get_current_user", action="store_true", help="Retrieve current user")
+    parser.add_argument("--get_version", action="store_true", help="Retrieve database version")
     args = parser.parse_args()
 
     scanner = SQLInjectionScanner(args.target_url, "")
@@ -375,6 +394,9 @@ async def main():
 
         if args.get_current_user:
             await scanner.get_current_user()
+
+        if args.get_version:
+            await scanner.get_version()
 
     else:
         print(f"Could not find a vulnerability...")
