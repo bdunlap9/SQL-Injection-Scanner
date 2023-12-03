@@ -361,16 +361,6 @@ class SQLInjectionScanner:
                 except Exception as e:
                     print(f"MySQL: Error performing POST request for query '{query}': {e}")
 
-    @classmethod
-    async def create(cls, target_url):
-        scanner = cls(target_url, "")
-        db_type = await scanner.scan_database_type()
-        if db_type:
-            await scanner.get_database_name()
-            await scanner.get_current_user()
-        else:
-            print(f"Could not find a vulnerability...")
-
 async def main():
     parser = argparse.ArgumentParser(description="SQL Injection Scanner")
     parser.add_argument("target_url", help="Target URL")
