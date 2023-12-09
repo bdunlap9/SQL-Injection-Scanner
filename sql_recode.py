@@ -504,7 +504,7 @@ async def get_dbname(self, db_type):
         db_type = await self.scan_database_type()
 
         if db_type:
-            self.db_type = db_type  # Set the class variable
+            self.db_type = db_type
             self.db_name = await self.get_dbname(db_type)
 
             if self.current_user:
@@ -518,10 +518,21 @@ async def get_dbname(self, db_type):
 
 async def main():
     parser = argparse.ArgumentParser(description="SQL Injection Scanner")
-    parser.add_argument("-u", "--target_url", help="Target URL")
+    parser.add_argument("-u", "--target_url", help="Target URL", required=True)
+    parser.add_argument("-t", "--database_type", help="Database type")
+    parser.add_argument("--get_version", action="store_true", help="Get database version")
+    parser.add_argument("--get_current_user", action="store_true", help="Get current user")
+
     args = parser.parse_args()
 
-    scanner = SQLInjectionScanner(args.target_url, "")
+    scanner = SQLInjectionScanner(args.target_url, args.database_type)
+
+    if args.get_version:
+        await scanner.get_version()
+
+    if args.get_current_user:
+        await scanner.get_current_user()
+
     await scanner.run_scanner()
 
 if __name__ == "__main__":
