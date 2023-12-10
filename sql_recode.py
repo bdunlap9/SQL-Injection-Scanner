@@ -131,7 +131,7 @@ class SQLInjectionScanner:
         return False
 
     async def time_based_detection(self, database_type):
-        payload = f"{database_type}' OR IF(1=1, BENCHMARK(5000000, SHA1('test')), 0) --"
+        payload = f"{database_type}' OR IF(1=1, SLEEP(5), 0) --"
         return await self.perform_injection_detection(payload)
 
     async def scan_blind_sql_injection(self, database_type):
