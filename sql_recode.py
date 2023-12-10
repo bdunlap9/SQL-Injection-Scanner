@@ -19,36 +19,12 @@ class SQLInjectionScanner:
             "Firebird": ['Dynamic SQL Error', 'SQL error code', 'arithmetic exception', 'numeric value is out of range', 'malformed string', 'Invalid token']
         }
         self.DB_TYPE_CONDITIONS = {
-            "MySQL": {
-                "SimpleTrue": "1=1",
-                "SimpleFalse": "1=2",
-                "ComplexCondition": "1=1 AND LENGTH(database()) > 5"
-            },
-            "PostGre": {
-                "SimpleTrue": "1=1",
-                "SimpleFalse": "1=2",
-                "ComplexCondition": "1=1 AND version() LIKE 'PostgreSQL%'"
-            },
-            "Microsoft_SQL": {
-                "SimpleTrue": "1=1",
-                "SimpleFalse": "1=2",
-                "ComplexCondition": "1=1 AND @@version LIKE 'Microsoft SQL%'"
-            },
-            "Oracle": {
-                "SimpleTrue": "1=1",
-                "SimpleFalse": "1=2",
-                "ComplexCondition": "1=1 AND LENGTH(user) > 5"
-            },
-            "Advantage_Database": {
-                "SimpleTrue": "1=1",
-                "SimpleFalse": "1=2",
-                "ComplexCondition": "1=1 AND AdsErrorCode = 0"
-            },
-            "Firebird": {
-                "SimpleTrue": "1=1",
-                "SimpleFalse": "1=2",
-                "ComplexCondition": "1=1 AND CURRENT_ROLE = 'ADMIN'"
-            }
+            "MySQL": {"SimpleTrue": "1=1", "SimpleFalse": "1=2", "ComplexCondition": "1=1 AND LENGTH(database()) > 5"},
+            "PostGre": {"SimpleTrue": "1=1", "SimpleFalse": "1=2", "ComplexCondition": "1=1 AND version() LIKE 'PostgreSQL%'"},
+            "Microsoft_SQL": {"SimpleTrue": "1=1", "SimpleFalse": "1=2", "ComplexCondition": "1=1 AND @@version LIKE 'Microsoft SQL%'"},
+            "Oracle": {"SimpleTrue": "1=1", "SimpleFalse": "1=2", "ComplexCondition": "1=1 AND LENGTH(user) > 5"},
+            "Advantage_Database": {"SimpleTrue": "1=1", "SimpleFalse": "1=2", "ComplexCondition": "1=1 AND AdsErrorCode = 0"},
+            "Firebird": {"SimpleTrue": "1=1", "SimpleFalse": "1=2", "ComplexCondition": "1=1 AND CURRENT_ROLE = 'ADMIN'"}
         }
         self.db_name = None
         self.current_user = None
@@ -63,7 +39,7 @@ class SQLInjectionScanner:
                 break
 
     async def scan_with_delimiter(self, database_type, delimiter):
-        url = f"{self.target_url}/{database_type}{delimiter}"
+        url = f"{self.target_url}/{delimiter}"
 
         try:
             async with self.session.get(url) as response:
