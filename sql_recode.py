@@ -994,6 +994,8 @@ class SQLInjectionScanner:
     async def run_scanner(self):
         db_type = await self.scan_database_type()
 
+        scan_blind_sql_injection()
+        
         if db_type:
             self.db_type = db_type
             self.db_name = await self.get_dbname(db_type)
