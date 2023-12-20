@@ -508,11 +508,17 @@ class SQLInjectionScanner:
                     async with session.post(full_url, data=post_data) as response:
                         result = await response.text()
                         soup = BS(result, 'html.parser')
-                        current_user = soup.find('div', class_='current-user').text
 
-                        if current_user not in unique_responses:
-                            unique_responses.add(current_user)
-                            print(f"PostgreSQL: Retrieving current user response for query '{query}': {current_user}")
+                        # Extracting current user from the response using the appropriate HTML tag and class
+                        current_user_tag = soup.find('div', class_='current-user')
+                        
+                        if current_user_tag:
+                            current_user = current_user_tag.text.strip()
+                            if current_user not in unique_responses:
+                                unique_responses.add(current_user)
+                                print(f"PostgreSQL: Retrieving current user response for query '{query}': {current_user}")
+                        else:
+                            print(f"PostgreSQL: Unable to find 'current-user' div in the response for query '{query}'")
                 except Exception as e:
                     print(f"PostgreSQL: Error performing POST request for query '{query}': {e}")
 
