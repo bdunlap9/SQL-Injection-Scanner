@@ -9,6 +9,38 @@ The script tests for SQL injection vulnerabilities by sending various payloads t
 - **Payloads used:**
   - `args.test + "'", args.test + '"', args.test[:-4] + ';', args.test + ")", args.test + "')", args.test + '")', args.test + '*'`
 
+### Payloads Used:
+
+1. `args.test + "'`:
+   - **Description:** Appends a single quote to the user-provided input.
+   - **Purpose:** Tests for SQL injection by potentially closing an open SQL string and generating an error if not handled correctly by the server.
+
+2. `args.test + '"`:
+   - **Description:** Appends a double quote to the user-provided input.
+   - **Purpose:** Similar to the single quote payload, tests for SQL injection by potentially closing an open SQL string with a double quote.
+
+3. `args.test[:-4] + ';'`:
+   - **Description:** Truncates the last four characters from the user-provided input and appends a semicolon.
+   - **Purpose:** Attempts to terminate an SQL statement prematurely by injecting a semicolon.
+
+4. `args.test + ")`:
+   - **Description:** Appends a closing parenthesis to the user-provided input.
+   - **Purpose:** Tests if the server handles injected closing parentheses correctly. Can help identify SQL injection vulnerabilities.
+
+5. `args.test + "')"`:
+   - **Description:** Appends a single quote, closing parenthesis, and double quote to the user-provided input.
+   - **Purpose:** Tests for SQL injection by combining characters that may lead to syntax errors in SQL statements.
+
+6. `args.test + '")'`:
+   - **Description:** Appends a double quote, closing parenthesis, and single quote to the user-provided input.
+   - **Purpose:** Similar to the previous payload, tests for SQL injection with a different character order.
+
+7. `args.test + '*'`:
+   - **Description:** Appends an asterisk (*) to the user-provided input.
+   - **Purpose:** Introduces a wildcard character to test how the server handles unexpected input. May trigger errors if not handled correctly.
+
+These payloads are crafted to manipulate SQL queries on the server-side. The goal is to provoke errors in the SQL execution process, revealing potential vulnerabilities in the application's handling of user input. Each payload tests a specific scenario to identify weaknesses in SQL query parsing and execution.
+
 - **Vulnerable Text:**
   - `['MySQL Query fail:', '/www/htdocs/', 'Query failed', 'mysqli_fetch_array()', 'mysqli_result', 'Warning: ', 'MySQL server', 'SQL syntax', 'You have an error in your SQL syntax;', 'mssql_query()', "Incorrect syntax near '='", 'mssql_num_rows()', 'Notice: ']`
 
